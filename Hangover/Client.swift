@@ -35,7 +35,7 @@ class Client {
 
     func connect() {
         let initial_data = self.initialize_chat()
-        let channel = Channel(cookies)
+//        let channel = Channel(cookies)
 
 //        def _on_connect():
 //            """Wrapper to fire on_connect with initial_data."""

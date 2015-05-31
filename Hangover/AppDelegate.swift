@@ -1,4 +1,4 @@
-//
+  //
 //  AppDelegate.swift
 //  Hangover
 //
@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
         // Insert code here to initialize your application
+        //Channel().listen()
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {

@@ -7,10 +7,12 @@
 //
 
 import Foundation
+import Alamofire
+import JavaScriptCore
 
 class Channel {
-    let ORIGIN_URL = "https://talkgadget.google.com"
-    let CHANNEL_URL_PREFIX = "https://0.client-channel.google.com/client-channel/{}"
+    static let ORIGIN_URL = "https://talkgadget.google.com"
+    let CHANNEL_URL_PREFIX = "https://0.client-channel.google.com/client-channel"
 
     // Long-polling requests send heartbeats every 15 seconds, so if we miss two in
     // a row, consider the connection dead.
@@ -19,6 +21,313 @@ class Channel {
 
     let CONNECT_TIMEOUT = 30
 
+    static let LEN_REGEX = "([0-9]+)\n"
+
+    var isConnected = false
+    var isSubscribed = false
+    var onConnectCalled = false
+    var cookies = Dictionary<String, String>()
+    var pushParser = PushDataParser()
+
+    var sidParam: String? = nil
+    var gSessionIDParam: String? = nil
+
+    static let MAX_RETRIES = 5       // maximum number of times to retry after a failure
+    var retries = MAX_RETRIES // number of remaining retries
+    var need_new_sid = true   // whether a new SID is needed
+
+    func listen() {
+        // Listen for messages on the channel.
+
+        if retries >= 0 {
+            // After the first failed retry, back off exponentially longer after
+            // each attempt.
+            if retries + 1 < Channel.MAX_RETRIES {
+                let backoff_seconds = UInt64(2 << (Channel.MAX_RETRIES - retries))
+                NSLog("Backing off for \(backoff_seconds) seconds")
+                usleep(useconds_t(backoff_seconds * USEC_PER_SEC))
+            }
+
+            // Request a new SID if we don't have one yet, or the previous one
+            // became invalid.
+            if need_new_sid {
+                // TODO: error handling
+
+                fetchChannelSID()
+                need_new_sid = false
+            }
+
+            // Clear any previous push data, since if there was an error it
+            // could contain garbage.
+            pushParser = PushDataParser()
+            startRequest()
+
+//            if let error = () {
+//                NSLog("Long-polling request failed: \(error)")
+//                retries -= 1
+//                if isConnected {
+//                    isConnected = false
+//                }
+
+                //self.on_disconnect.fire()
+
+//                if isinstance(e, UnknownSIDError) {
+//                    need_new_sid = true
+//                }
+//            } else {
+                // The connection closed successfully, so reset the number of
+                // retries.
+//                retries = Channel.MAX_RETRIES
+//            }
+
+            // If the request ended with an error, the client must account for
+            // messages being dropped during this time.
+        } else {
+            NSLog("Listen failed due to no retries left.");
+        }
+        // logger.error('Ran out of retries for long-polling request')
+    }
+
+    func startRequest() {
+        //  Open a long-polling request and receive push data.
+        //
+        //  This method uses keep-alive to make re-opening the request faster, but
+        //  the remote server will set the "Connection: close" header once an hour.
+        //
+        //  Raises hangups.NetworkError or UnknownSIDError.
+        let params: Dictionary<String, AnyObject> = [
+            "VER": 8,
+            "gsessionid": gSessionIDParam!,
+            "RID": "rpc",
+            "t": 1,  // trial
+            "SID": sidParam!,
+            "CI": 0,
+            "ctype": "hangouts", // client type
+            "TYPE": "xmlhttp",
+        ]
+        let headers = getAuthorizationHeaders(cookies["SAPISID"]!)
+
+        NSLog("Opening new long-polling request")
+        //  Make the request!
+
+        let url = "\(CHANNEL_URL_PREFIX)/channel/bind"
+        //  TODO: Include cookies
+        //  TODO: Include timeout
+
+        var defaultHeaders = Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders ?? [:]
+        for (k, v) in headers {
+            defaultHeaders[k] = v
+        }
+
+        let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
+        configuration.HTTPAdditionalHeaders = defaultHeaders
+
+        let manager = Alamofire.Manager(configuration: configuration)
+        manager.request(.GET, url, parameters: params).response(onResponse)
+      
+
+//        except asyncio.TimeoutError:
+//            raise exceptions.NetworkError('Request timed out')
+//        except aiohttp.ClientError as e:
+//            raise exceptions.NetworkError('Request connection error: {}'
+//                                          .format(e))
+//        except aiohttp.ServerDisconnectedError as e:
+//            raise exceptions.NetworkError('Server disconnected error: {}'
+//                                          .format(e))
+//        if res.status == 400 and res.reason == 'Unknown SID':
+//            raise UnknownSIDError('SID became invalid')
+//        elif res.status != 200:
+//            raise exceptions.NetworkError(
+//                'Request return unexpected status: {}: {}'
+//                .format(res.status, res.reason)
+//            )
+//        while True:
+//            try:
+//                chunk = yield from asyncio.wait_for(
+//                    res.content.read(MAX_READ_BYTES), PUSH_TIMEOUT
+//                )
+//            except asyncio.TimeoutError:
+//                raise exceptions.NetworkError('Request timed out')
+//            except aiohttp.ClientError as e:
+//                raise exceptions.NetworkError('Request connection error: {}'
+//                                              .format(e))
+//            except aiohttp.ServerDisconnectedError as e:
+//                raise exceptions.NetworkError('Server disconnected error: {}'
+//                                              .format(e))
+//            except asyncio.CancelledError:
+//                # Prevent ResourceWarning when channel is disconnected.
+//                res.close()
+//                raise
+//            if chunk:
+//                yield from self._on_push_data(chunk)
+//            else:
+//                # Close the response to allow the connection to be reused for
+//                # the next request.
+//                res.close()
+//                break
+    }
+
+    func fetchChannelSID() {
+        //  Creates a new channel for receiving push data.
+
+        NSLog("Requesting new gsessionid and SID...")
+        // There's a separate API to get the gsessionid alone that Hangouts for
+        // Chrome uses, but if we don't send a gsessionid with this request, it
+        // will return a gsessionid as well as the SID.
+
+//      res = yield from http_utils.fetch(
+//          'post', CHANNEL_URL_PREFIX.format('channel/bind'),
+//          cookies=self._cookies, data='count=0', connector=self._connector,
+//          params={
+//              'VER': 8,
+//              'RID': 81187,
+//              'ctype': 'hangouts',  # client type
+//          }
+//      )
+      var params = ["VER": 8, "RID": 81187, "ctype": "hangouts"]
+      let headers = getAuthorizationHeaders(cookies["SAPISID"]!)
+      let url = "\(CHANNEL_URL_PREFIX)/channel/bind"
+      //  TODO: Include cookies
+      //  TODO: Include timeout
+
+      var defaultHeaders = Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders ?? [:]
+      for (k, v) in headers {
+        defaultHeaders[k] = v
+      }
+
+      let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
+      configuration.HTTPAdditionalHeaders = defaultHeaders
+
+      let manager = Alamofire.Manager(configuration: configuration)
+      manager.upload(.POST, url, parameters: params).response(onResponse)
+
+//      self._sid_param, self._gsessionid_param = _parse_sid_response(res.body)
+        isSubscribed = false
+        NSLog("New SID: \(sidParam)")
+        NSLog("New gsessionid: \(gSessionIDParam)")
+    }
+
+    private func onResponse(
+      request: NSURLRequest,
+      response: NSHTTPURLResponse?,
+      responseObject: AnyObject?,
+      error: NSError?) -> Void {
+        if let error = error {
+            NSLog("Request failed: \(error)")
+        } else {
+
+        }
+    }
+
+
+}
+
+func parseSIDResponse(res: NSData) -> (sid: String, gSessionID: String) {
+    //  Parse response format for request for new channel SID.
+    //
+    //  Example format (after parsing JS):
+    //  [   [0,["c","SID_HERE","",8]],
+    //      [1,[{"gsid":"GSESSIONID_HERE"}]]]
+    if let firstSubmission = PushDataParser().getSubmissions(res).first {
+        let ctx = JSContext()
+        let val: JSValue = ctx.evaluateScript(firstSubmission)
+        let sid = ((val.toArray()[0] as! NSArray)[1] as! NSArray)[1] as! String
+        let gSessionID = (((val.toArray()[1] as! NSArray)[1] as! NSArray)[0] as! NSDictionary)["gsid"]! as! String
+        return (sid, gSessionID)
+    }
+    return ("", "")
+}
+
+func getAuthorizationHeaders(sapisid_cookie: String) -> Dictionary<String, String> {
+    //  Return authorization headers for API request.
+    //
+    // It doesn't seem to matter what the url and time are as long as they are
+    // consistent.
+
+    let now = NSDate()
+    let time_msec = Int(now.timeIntervalSince1970 * 1000)
+
+    let auth_string = "\(time_msec) \(sapisid_cookie) \(Channel.ORIGIN_URL)"
+    let auth_hash = auth_string.SHA1()
+    let sapisidhash = "SAPISIDHASH \(time_msec)_\(auth_hash)"
+    return [
+        "Authorization": sapisidhash,
+        "X-Origin": Channel.ORIGIN_URL,
+        "X-Goog-Authuser": "0",
+    ]
+}
+
+func bestEffortDecode(data: NSData) -> String? {
+    // Decode data_bytes into a string using UTF-8.
+    //
+    // If data_bytes cannot be decoded, pop the last byte until it can be or
+    // return an empty string.
+    for var i = 0; i < data.length; i++ {
+        if let s = NSString(data: data.subdataWithRange(NSMakeRange(0, data.length - i)), encoding: NSUTF8StringEncoding) {
+            return s as String
+        }
+    }
+    return nil
+}
+
+class PushDataParser {
+    // Parse data from the long-polling endpoint.
+
+    var buf = NSMutableData()
+
+    func getSubmissions(newBytes: NSData) -> [String] {
+        //  Yield submissions generated from received data.
+        //
+        //  Responses from the push endpoint consist of a sequence of submissions.
+        //  Each submission is prefixed with its length followed by a newline.
+        //
+        //  The buffer may not be decodable as UTF-8 if there's a split multi-byte
+        //  character at the end. To handle this, do a "best effort" decode of the
+        //  buffer to decode as much of it as possible.
+        //
+        //  The length is actually the length of the string as reported by
+        //  JavaScript. JavaScript's string length function returns the number of
+        //  code units in the string, represented in UTF-16. We can emulate this by
+        //  encoding everything in UTF-16 and multipling the reported length by 2.
+        //
+        //  Note that when encoding a string in UTF-16, Python will prepend a
+        //  byte-order character, so we need to remove the first two bytes.
+
+        buf.appendData(newBytes)
+        var submissions = [String]()
+
+        while buf.length > 0 {
+            if let decoded = bestEffortDecode(buf) {
+                let bufUTF16 = decoded.dataUsingEncoding(NSUTF16BigEndianStringEncoding)!
+                let decodedUtf16LengthInChars = bufUTF16.length / 2
+
+                let lengths = Regex(Channel.LEN_REGEX).findall(decoded)
+                if let length_str = lengths.first {
+                    let length_str_without_newline = length_str.substringToIndex(advance(length_str.endIndex, -1))
+                    if let length = length_str_without_newline.toInt() {
+                        if decodedUtf16LengthInChars - count(length_str) < length {
+                          break
+                        }
+
+                        let subData = bufUTF16.subdataWithRange(NSMakeRange(count(length_str) * 2, length * 2))
+                        let submission = NSString(data: subData, encoding: NSUTF16BigEndianStringEncoding)! as String
+                        submissions.append(submission)
+
+                        let submissionAsUTF8 = submission.dataUsingEncoding(NSUTF8StringEncoding)!
+
+                        let removeRange = NSMakeRange(0, count(length_str) + submissionAsUTF8.length)
+                        buf.replaceBytesInRange(removeRange, withBytes: nil, length: 0)
+                    } else {
+                      break
+                    }
+                } else {
+                    break
+                }
+            }
+        }
+
+        return submissions
+    }
 }
 
 //"""Support for reading messages from the long-polling channel.
@@ -40,95 +349,12 @@ class Channel {
 //LEN_REGEX = re.compile(r'([0-9]+)\n', re.MULTILINE)
 
 
-//
-//
 //class UnknownSIDError(exceptions.HangupsError):
 //
 //    """hangups channel session expired."""
 //
 //    pass
 //
-//
-//def get_authorization_headers(sapisid_cookie):
-//    """Return authorization headers for API request."""
-//    # It doesn't seem to matter what the url and time are as long as they are
-//    # consistent.
-//    time_msec = int(time.time() * 1000)
-//    auth_string = '{} {} {}'.format(time_msec, sapisid_cookie, ORIGIN_URL)
-//    auth_hash = hashlib.sha1(auth_string.encode()).hexdigest()
-//    sapisidhash = 'SAPISIDHASH {}_{}'.format(time_msec, auth_hash)
-//    return {
-//        'authorization': sapisidhash,
-//        'x-origin': ORIGIN_URL,
-//        'x-goog-authuser': '0',
-//    }
-//
-//
-//def _best_effort_decode(data_bytes):
-//    """Decode data_bytes into a string using UTF-8.
-//
-//    If data_bytes cannot be decoded, pop the last byte until it can be or
-//    return an empty string.
-//    """
-//    for end in reversed(range(1, len(data_bytes) + 1)):
-//        try:
-//            return data_bytes[0:end].decode()
-//        except UnicodeDecodeError:
-//            pass
-//    return ''
-//
-//
-//class PushDataParser(object):
-//    """Parse data from the long-polling endpoint."""
-//
-//    def __init__(self):
-//        # Buffer for bytes containing utf-8 text:
-//        self._buf = b''
-//
-//    def get_submissions(self, new_data_bytes):
-//        """Yield submissions generated from received data.
-//
-//        Responses from the push endpoint consist of a sequence of submissions.
-//        Each submission is prefixed with its length followed by a newline.
-//
-//        The buffer may not be decodable as UTF-8 if there's a split multi-byte
-//        character at the end. To handle this, do a "best effort" decode of the
-//        buffer to decode as much of it as possible.
-//
-//        The length is actually the length of the string as reported by
-//        JavaScript. JavaScript's string length function returns the number of
-//        code units in the string, represented in UTF-16. We can emulate this by
-//        encoding everything in UTF-16 and multipling the reported length by 2.
-//
-//        Note that when encoding a string in UTF-16, Python will prepend a
-//        byte-order character, so we need to remove the first two bytes.
-//        """
-//        self._buf += new_data_bytes
-//
-//        while True:
-//
-//            buf_decoded = _best_effort_decode(self._buf)
-//            buf_utf16 = buf_decoded.encode('utf-16')[2:]
-//
-//            lengths = LEN_REGEX.findall(buf_decoded)
-//            if len(lengths) == 0:
-//                break
-//            else:
-//                # Both lengths are in number of bytes in UTF-16 encoding.
-//                # The length of the submission:
-//                length = int(lengths[0]) * 2
-//                # The length of the submission length and newline:
-//                length_length = len((lengths[0] + '\n').encode('utf-16')[2:])
-//                if len(buf_utf16) - length_length < length:
-//                    break
-//
-//                submission = buf_utf16[length_length:length_length + length]
-//                yield submission.decode('utf-16')
-//                # Drop the length and the submission itself from the beginning
-//                # of the buffer.
-//                drop_length = (len((lengths[0] + '\n').encode()) +
-//                               len(submission.decode('utf-16').encode()))
-//                self._buf = self._buf[drop_length:]
 //
 //
 //def _parse_sid_response(res):
@@ -167,76 +393,6 @@ class Channel {
 //        # (submission):
 //        self.on_message = event.Event('Channel.on_message')
 //
-//        # True if the channel is currently connected:
-//        self._is_connected = False
-//        # True if the channel has been subscribed:
-//        self._is_subscribed = False
-//        # True if the on_connect event has been called at least once:
-//        self._on_connect_called = False
-//        # Request cookies dictionary:
-//        self._cookies = cookies
-//        # Parser for assembling messages:
-//        self._push_parser = None
-//        # aiohttp connector for keep-alive:
-//        self._connector = connector
-//
-//        # Discovered parameters:
-//        self._sid_param = None
-//        self._gsessionid_param = None
-//
-//    @property
-//    def is_connected(self):
-//        """Whether the client is currently connected."""
-//        return self._is_connected
-//
-//    @asyncio.coroutine
-//    def listen(self):
-//        """Listen for messages on the channel.
-//
-//        This method only returns when the connection has been closed due to an
-//        error.
-//        """
-//        MAX_RETRIES = 5  # maximum number of times to retry after a failure
-//        retries = MAX_RETRIES  # number of remaining retries
-//        need_new_sid = True  # whether a new SID is needed
-//
-//        while retries >= 0:
-//            # After the first failed retry, back off exponentially longer after
-//            # each attempt.
-//            if retries + 1 < MAX_RETRIES:
-//                backoff_seconds = 2 ** (MAX_RETRIES - retries)
-//                logger.info('Backing off for {} seconds'
-//                            .format(backoff_seconds))
-//                yield from asyncio.sleep(backoff_seconds)
-//
-//            # Request a new SID if we don't have one yet, or the previous one
-//            # became invalid.
-//            if need_new_sid:
-//                # TODO: error handling
-//                yield from self._fetch_channel_sid()
-//                need_new_sid = False
-//            # Clear any previous push data, since if there was an error it
-//            # could contain garbage.
-//            self._push_parser = PushDataParser()
-//            try:
-//                yield from self._longpoll_request()
-//            except (UnknownSIDError, exceptions.NetworkError) as e:
-//                logger.warning('Long-polling request failed: {}'.format(e))
-//                retries -= 1
-//                if self._is_connected:
-//                    self._is_connected = False
-//                    yield from self.on_disconnect.fire()
-//                if isinstance(e, UnknownSIDError):
-//                    need_new_sid = True
-//            else:
-//                # The connection closed successfully, so reset the number of
-//                # retries.
-//                retries = MAX_RETRIES
-//
-//            # If the request ended with an error, the client must account for
-//            # messages being dropped during this time.
-//
-//        logger.error('Ran out of retries for long-polling request')
 //
 //    ##########################################################################
 //    # Private methods
@@ -309,73 +465,6 @@ class Channel {
 //        )
 //        logger.info('Channel is now subscribed')
 //        self._is_subscribed = True
-//
-//    @asyncio.coroutine
-//    def _longpoll_request(self):
-//        """Open a long-polling request and receive push data.
-//
-//        This method uses keep-alive to make re-opening the request faster, but
-//        the remote server will set the "Connection: close" header once an hour.
-//
-//        Raises hangups.NetworkError or UnknownSIDError.
-//        """
-//        params = {
-//            'VER': 8,
-//            'gsessionid': self._gsessionid_param,
-//            'RID': 'rpc',
-//            't': 1,  # trial
-//            'SID': self._sid_param,
-//            'CI': 0,
-//            'ctype': 'hangouts',  # client type
-//            'TYPE': 'xmlhttp',
-//        }
-//        headers = get_authorization_headers(self._cookies['SAPISID'])
-//        logger.info('Opening new long-polling request')
-//        try:
-//            res = yield from asyncio.wait_for(aiohttp.request(
-//                'get', CHANNEL_URL_PREFIX.format('channel/bind'),
-//                params=params, cookies=self._cookies, headers=headers,
-//                connector=self._connector
-//            ), CONNECT_TIMEOUT)
-//        except asyncio.TimeoutError:
-//            raise exceptions.NetworkError('Request timed out')
-//        except aiohttp.ClientError as e:
-//            raise exceptions.NetworkError('Request connection error: {}'
-//                                          .format(e))
-//        except aiohttp.ServerDisconnectedError as e:
-//            raise exceptions.NetworkError('Server disconnected error: {}'
-//                                          .format(e))
-//        if res.status == 400 and res.reason == 'Unknown SID':
-//            raise UnknownSIDError('SID became invalid')
-//        elif res.status != 200:
-//            raise exceptions.NetworkError(
-//                'Request return unexpected status: {}: {}'
-//                .format(res.status, res.reason)
-//            )
-//        while True:
-//            try:
-//                chunk = yield from asyncio.wait_for(
-//                    res.content.read(MAX_READ_BYTES), PUSH_TIMEOUT
-//                )
-//            except asyncio.TimeoutError:
-//                raise exceptions.NetworkError('Request timed out')
-//            except aiohttp.ClientError as e:
-//                raise exceptions.NetworkError('Request connection error: {}'
-//                                              .format(e))
-//            except aiohttp.ServerDisconnectedError as e:
-//                raise exceptions.NetworkError('Server disconnected error: {}'
-//                                              .format(e))
-//            except asyncio.CancelledError:
-//                # Prevent ResourceWarning when channel is disconnected.
-//                res.close()
-//                raise
-//            if chunk:
-//                yield from self._on_push_data(chunk)
-//            else:
-//                # Close the response to allow the connection to be reused for
-//                # the next request.
-//                res.close()
-//                break
 //
 //    @asyncio.coroutine
 //    def _on_push_data(self, data_bytes):

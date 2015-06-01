@@ -16,6 +16,10 @@
 		33368DDA1B12B5C4009B28B2 /* PBLite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DD81B12B545009B28B2 /* PBLite.swift */; };
 		33368DDC1B15393D009B28B2 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DDB1B15393D009B28B2 /* Client.swift */; };
 		33405A5C1B153E5200C81DC3 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5B1B153E5200C81DC3 /* Channel.swift */; };
+		33405A5E1B1BF89E00C81DC3 /* Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5D1B1BF89E00C81DC3 /* Auth.swift */; };
+		33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5F1B1C0B0800C81DC3 /* Manager.swift */; };
+		33405A611B1C0F8400C81DC3 /* Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5D1B1BF89E00C81DC3 /* Auth.swift */; };
+		33405A621B1C0F8800C81DC3 /* Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5F1B1C0B0800C81DC3 /* Manager.swift */; };
 		33806E271B1A6875007C6BE4 /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
 		33806E281B1A6875007C6BE4 /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
 		33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */; };
@@ -53,6 +57,8 @@
 		33368DD81B12B545009B28B2 /* PBLite.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PBLite.swift; sourceTree = "<group>"; };
 		33368DDB1B15393D009B28B2 /* Client.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
 		33405A5B1B153E5200C81DC3 /* Channel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
+		33405A5D1B1BF89E00C81DC3 /* Auth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Auth.swift; sourceTree = "<group>"; };
+		33405A5F1B1C0B0800C81DC3 /* Manager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Manager.swift; sourceTree = "<group>"; };
 		33806E241B1A6875007C6BE4 /* HangoverTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HangoverTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		33806E251B1A6875007C6BE4 /* NSString+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+SHA1.h"; sourceTree = "<group>"; };
 		33806E261B1A6875007C6BE4 /* NSString+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+SHA1.m"; sourceTree = "<group>"; };
@@ -117,6 +123,8 @@
 				33368DD81B12B545009B28B2 /* PBLite.swift */,
 				33368DDB1B15393D009B28B2 /* Client.swift */,
 				33405A5B1B153E5200C81DC3 /* Channel.swift */,
+				33405A5F1B1C0B0800C81DC3 /* Manager.swift */,
+				33405A5D1B1BF89E00C81DC3 /* Auth.swift */,
 				33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */,
 				33E9F5C31B1A2CFE0027F7EC /* Regex.swift */,
 				33368DBF1B12ACD4009B28B2 /* Images.xcassets */,
@@ -383,6 +391,8 @@
 				33368DDC1B15393D009B28B2 /* Client.swift in Sources */,
 				33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */,
 				33368DD91B12B545009B28B2 /* PBLite.swift in Sources */,
+				33405A5E1B1BF89E00C81DC3 /* Auth.swift in Sources */,
+				33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,6 +407,8 @@
 				33E9F5C51B1A37770027F7EC /* Channel.swift in Sources */,
 				33368DDA1B12B5C4009B28B2 /* PBLite.swift in Sources */,
 				33806E281B1A6875007C6BE4 /* NSString+SHA1.m in Sources */,
+				33405A621B1C0F8800C81DC3 /* Manager.swift in Sources */,
+				33405A611B1C0F8400C81DC3 /* Auth.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

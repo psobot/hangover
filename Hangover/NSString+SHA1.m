@@ -14,7 +14,7 @@
 {
   NSUInteger bytesCount = self.length;
   if (bytesCount) {
-    static char const *kHexChars = "0123456789ABCDEF";
+    static char const *kHexChars = "0123456789abcdef";
     const unsigned char *dataBuffer = self.bytes;
     char *chars = malloc(sizeof(char) * (bytesCount * 2 + 1));
     char *s = chars;

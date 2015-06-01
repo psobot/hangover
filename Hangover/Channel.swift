@@ -26,7 +26,6 @@ class Channel {
     var isConnected = false
     var isSubscribed = false
     var onConnectCalled = false
-    var cookies = Dictionary<String, String>()
     var pushParser = PushDataParser()
 
     var sidParam: String? = nil
@@ -36,56 +35,72 @@ class Channel {
     var retries = MAX_RETRIES // number of remaining retries
     var need_new_sid = true   // whether a new SID is needed
 
-    func listen() {
-        // Listen for messages on the channel.
+    var manager: Alamofire.Manager?
 
-        if retries >= 0 {
-            // After the first failed retry, back off exponentially longer after
-            // each attempt.
-            if retries + 1 < Channel.MAX_RETRIES {
-                let backoff_seconds = UInt64(2 << (Channel.MAX_RETRIES - retries))
-                NSLog("Backing off for \(backoff_seconds) seconds")
-                usleep(useconds_t(backoff_seconds * USEC_PER_SEC))
+    func getCookieValue(key: String) -> String? {
+        if let c = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies {
+            if let match = (c.filter {
+                ($0 as! NSHTTPCookie).name == key &&
+                ($0 as! NSHTTPCookie).domain == ".google.com"
+            }).first as? NSHTTPCookie {
+                return match.value()
             }
-
-            // Request a new SID if we don't have one yet, or the previous one
-            // became invalid.
-            if need_new_sid {
-                // TODO: error handling
-
-                fetchChannelSID()
-                need_new_sid = false
-            }
-
-            // Clear any previous push data, since if there was an error it
-            // could contain garbage.
-            pushParser = PushDataParser()
-            startRequest()
-
-//            if let error = () {
-//                NSLog("Long-polling request failed: \(error)")
-//                retries -= 1
-//                if isConnected {
-//                    isConnected = false
-//                }
-
-                //self.on_disconnect.fire()
-
-//                if isinstance(e, UnknownSIDError) {
-//                    need_new_sid = true
-//                }
-//            } else {
-                // The connection closed successfully, so reset the number of
-                // retries.
-//                retries = Channel.MAX_RETRIES
-//            }
-
-            // If the request ended with an error, the client must account for
-            // messages being dropped during this time.
-        } else {
-            NSLog("Listen failed due to no retries left.");
         }
-        // logger.error('Ran out of retries for long-polling request')
+        return nil
+    }
+
+    func listen() {
+        withAuthenticatedManager(loadCodes()!.access_token) { (manager: Alamofire.Manager) in
+            self.manager = manager
+            // Listen for messages on the channel.
+
+            if self.retries >= 0 {
+                // After the first failed retry, back off exponentially longer after
+                // each attempt.
+                if self.retries + 1 < Channel.MAX_RETRIES {
+                    let backoff_seconds = UInt64(2 << (Channel.MAX_RETRIES - self.retries))
+                    NSLog("Backing off for \(backoff_seconds) seconds")
+                    usleep(useconds_t(backoff_seconds * USEC_PER_SEC))
+                }
+
+                // Request a new SID if we don't have one yet, or the previous one
+                // became invalid.
+                if self.need_new_sid {
+                    // TODO: error handling
+                    self.fetchChannelSID()
+                    return
+                }
+
+                // Clear any previous push data, since if there was an error it
+                // could contain garbage.
+                self.pushParser = PushDataParser()
+                self.startRequest()
+
+    //            if let error = () {
+    //                NSLog("Long-polling request failed: \(error)")
+    //                retries -= 1
+    //                if isConnected {
+    //                    isConnected = false
+    //                }
+
+                    //self.on_disconnect.fire()
+
+    //                if isinstance(e, UnknownSIDError) {
+    //                    need_new_sid = true
+    //                }
+    //            } else {
+                    // The connection closed successfully, so reset the number of
+                    // retries.
+    //                retries = Channel.MAX_RETRIES
+    //            }
+
+                // If the request ended with an error, the client must account for
+                // messages being dropped during this time.
+            } else {
+                NSLog("Listen failed due to no retries left.");
+            }
+            // logger.error('Ran out of retries for long-polling request')
+        }
     }
 
     func startRequest() {
@@ -95,35 +110,23 @@ class Channel {
         //  the remote server will set the "Connection: close" header once an hour.
         //
         //  Raises hangups.NetworkError or UnknownSIDError.
-        let params: Dictionary<String, AnyObject> = [
-            "VER": 8,
-            "gsessionid": gSessionIDParam!,
-            "RID": "rpc",
-            "t": 1,  // trial
-            "SID": sidParam!,
-            "CI": 0,
-            "ctype": "hangouts", // client type
-            "TYPE": "xmlhttp",
-        ]
-        let headers = getAuthorizationHeaders(cookies["SAPISID"]!)
-
         NSLog("Opening new long-polling request")
         //  Make the request!
 
-        let url = "\(CHANNEL_URL_PREFIX)/channel/bind"
-        //  TODO: Include cookies
+        let queryString = "VER=8&RID=rpc&t=1&CI=0&ctype=hangouts&TYPE=xmlhttp&gsessionid=\(gSessionIDParam!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!)&SID=\(sidParam!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!)"
+        let url = "\(CHANNEL_URL_PREFIX)/channel/bind?\(queryString)"
+
         //  TODO: Include timeout
 
-        var defaultHeaders = Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders ?? [:]
-        for (k, v) in headers {
-            defaultHeaders[k] = v
+        var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+        let sapisid = getCookieValue("SAPISID")!
+        println("SAPISID param: \(sapisid)")
+        for (k, v) in getAuthorizationHeaders(sapisid) {
+            println("Setting header \(k) to \(v)")
+            request.setValue(v, forHTTPHeaderField: k)
         }
-
-        let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
-        configuration.HTTPAdditionalHeaders = defaultHeaders
-
-        let manager = Alamofire.Manager(configuration: configuration)
-        manager.request(.GET, url, parameters: params).response(onResponse)
+        println("Making request to URL: \(url)")
+        manager!.request(request).response(onResponse)
       
 
 //        except asyncio.TimeoutError:
@@ -184,27 +187,20 @@ class Channel {
 //              'ctype': 'hangouts',  # client type
 //          }
 //      )
-      var params = ["VER": 8, "RID": 81187, "ctype": "hangouts"]
-      let headers = getAuthorizationHeaders(cookies["SAPISID"]!)
-      let url = "\(CHANNEL_URL_PREFIX)/channel/bind"
-      //  TODO: Include cookies
-      //  TODO: Include timeout
+        var params = ["VER": 8, "RID": 81187, "ctype": "hangouts"]
+        let headers = getAuthorizationHeaders(getCookieValue("SAPISID")!)
+        let url = "\(CHANNEL_URL_PREFIX)/channel/bind?VER=8&RID=81187&ctype=hangouts"
+        //  TODO: Include cookies
+        //  TODO: Include timeout
 
-      var defaultHeaders = Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders ?? [:]
-      for (k, v) in headers {
-        defaultHeaders[k] = v
-      }
-
-      let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
-      configuration.HTTPAdditionalHeaders = defaultHeaders
-
-      let manager = Alamofire.Manager(configuration: configuration)
-      manager.upload(.POST, url, parameters: params).response(onResponse)
-
-//      self._sid_param, self._gsessionid_param = _parse_sid_response(res.body)
+        var URLRequest = NSMutableURLRequest(URL: NSURL(string: url)!)
+        URLRequest.HTTPMethod = "POST"
+        for (k, v) in headers {
+            URLRequest.addValue(v, forHTTPHeaderField: k)
+        }
+        let data = "count=0".dataUsingEncoding(NSUTF8StringEncoding)!
         isSubscribed = false
-        NSLog("New SID: \(sidParam)")
-        NSLog("New gsessionid: \(gSessionIDParam)")
+        manager!.upload(URLRequest, data: data).response(onChannelSIDResponse)
     }
 
     private func onResponse(
@@ -215,10 +211,32 @@ class Channel {
         if let error = error {
             NSLog("Request failed: \(error)")
         } else {
-
+            if response?.statusCode >= 400 {
+                NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
+                self.need_new_sid = true
+                listen()
+            }
         }
     }
 
+    private func onChannelSIDResponse(
+        request: NSURLRequest,
+        response: NSHTTPURLResponse?,
+        responseObject: AnyObject?,
+        error: NSError?) -> Void {
+            if let error = error {
+                NSLog("Request failed: \(error)")
+            } else {
+                let responseValues = parseSIDResponse(responseObject as! NSData)
+                println("Got SID response back: \(NSString(data: responseObject as! NSData, encoding: 4))")
+                sidParam = responseValues.sid
+                gSessionIDParam = responseValues.gSessionID
+                NSLog("New SID: \(sidParam)")
+                NSLog("New gsessionid: \(gSessionIDParam)")
+                need_new_sid = false
+                listen()
+            }
+    }
 
 }
 

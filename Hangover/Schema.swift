@@ -36,9 +36,75 @@ class TypingStatus : Enum {
     static let STOPPED: TypingStatus = 3 // The user stopped typing with no inputted text
 }
 
+class FocusStatus : Enum {
+    static let FOCUSED: FocusStatus = 1
+    static let UNFOCUSED: FocusStatus = 2
+}
+
+class FocusDevice : Enum {
+    static let DESKTOP: FocusDevice = 20
+    static let MOBILE: FocusDevice = 300
+    static let UNSPECIFIED: FocusDevice? = nil
+}
+
 class ConversationType : Enum {
     static let STICKY_ONE_TO_ONE: ConversationType = 1
     static let GROUP: ConversationType = 2
+}
+
+class ClientConversationView : Enum {
+    static let UNKNOWN_CONVERSATION_VIEW: ClientConversationView = 0
+    static let INBOX_VIEW: ClientConversationView = 1
+    static let ARCHIVED_VIEW: ClientConversationView = 2
+}
+
+class ClientNotificationLevel : Enum {
+    static let UNKNOWN: ClientNotificationLevel? = nil
+    static let QUIET: ClientNotificationLevel = 10
+    static let RING: ClientNotificationLevel = 30
+}
+
+class ClientConversationStatus : Enum {
+    static let UNKNOWN_CONVERSATION_STATUS: ClientConversationStatus = 0
+    static let INVITED: ClientConversationStatus = 1
+    static let ACTIVE: ClientConversationStatus = 2
+    static let LEFT: ClientConversationStatus = 3
+}
+
+class SegmentType : Enum {
+    static let TEXT: SegmentType = 0
+    static let LINE_BREAK: SegmentType = 1
+    static let LINK: SegmentType = 2
+}
+
+class MembershipChangeType : Enum {
+    static let JOIN: MembershipChangeType = 1
+    static let LEAVE: MembershipChangeType = 2
+}
+
+class ClientHangoutEventType : Enum {
+    static let START_HANGOUT: ClientHangoutEventType = 1
+    static let END_HANGOUT: ClientHangoutEventType = 2
+    static let JOIN_HANGOUT: ClientHangoutEventType = 3
+    static let LEAVE_HANGOUT: ClientHangoutEventType = 4
+    static let HANGOUT_COMING_SOON: ClientHangoutEventType = 5
+    static let ONGOING_HANGOUT: ClientHangoutEventType = 6
+}
+
+class OffTheRecordStatus : Enum {
+    static let OFF_THE_RECORD: OffTheRecordStatus = 1
+    static let ON_THE_RECORD: OffTheRecordStatus = 2
+}
+
+class ClientOffTheRecordToggle : Enum {
+    static let ENABLED: ClientOffTheRecordToggle = 0
+    static let DISABLED: ClientOffTheRecordToggle = 1
+}
+
+class ActiveClientState : Enum {
+    static let NO_ACTIVE_CLIENT: ActiveClientState = 0
+    static let IS_ACTIVE_CLIENT: ActiveClientState = 1
+    static let OTHER_CLIENT_IS_ACTIVE: ActiveClientState = 2
 }
 
 /*
@@ -58,15 +124,15 @@ class CLIENT_SET_TYPING_NOTIFICATION : Message {
     var conversation_id = CONVERSATION_ID()
     var user_id = USER_ID()
     var timestamp: NSString = ""
-    var status: NSNumber = 0
+    var status: TypingStatus = 0
 }
 
 class CLIENT_SET_FOCUS_NOTIFICATION : Message {
     var conversation_id = CONVERSATION_ID()
     var user_id = USER_ID()
     var timestamp: NSString = ""
-    var status: NSNumber = 0
-    var device: NSNumber = 0
+    var status: FocusStatus = 0
+    var device: FocusDevice?
 }
 
 class CLIENT_CONVERSATION : Message {
@@ -88,8 +154,8 @@ class CLIENT_CONVERSATION : Message {
         }
         var self_read_state = READ_STATE()
 
-        var status: NSNumber = 0 // ClientConversationStatus,
-        var notification_level: NSNumber = 0 // ClientNotificationLevel
+        var status: ClientConversationStatus = 0
+        var notification_level: ClientNotificationLevel = 0
 
         var view = NSArray() // [ClientConversationView]
 
@@ -116,7 +182,7 @@ class CLIENT_CONVERSATION : Message {
 
     var read_state = NSArray() // [READ_STATE]
     var field4: OptionalField = nil
-    var otr_status: NSNumber = 0 // OffTheRecordStatus
+    var otr_status: OffTheRecordStatus = 0
     var field5: OptionalField = nil
     var field6: OptionalField = nil
     var current_participant = NSArray() // [USER_ID]
@@ -136,7 +202,7 @@ class CLIENT_CONVERSATION : Message {
 }
 
 class MESSAGE_SEGMENT : Message {
-    var type_: NSNumber = 0 // SegmentType
+    var type_: SegmentType = 0
     var text: NSString?
 
     class FORMATTING : Message {

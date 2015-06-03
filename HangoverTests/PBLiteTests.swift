@@ -52,11 +52,11 @@ class PBLiteTests: XCTestCase {
 
     func testMessageSegmentWithFormatting() {
         let segment = MESSAGE_SEGMENT.parse([1, NSNull(), ["true", NSNull(), NSNull(), NSNull()], NSNull()])!
-        XCTAssertEqual(1, segment.type_)
+        XCTAssertEqual(SegmentType.LINE_BREAK, segment.type_)
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.link_data)
 
-        let formatting = segment.formatting!
+        let formatting = segment.formatting!    
         XCTAssertEqual("true", formatting.bold!)
     }
 

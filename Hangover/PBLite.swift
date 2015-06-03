@@ -135,6 +135,16 @@ class Message : NSObject {
                 } else if let message = property as? Message {
                     let val: (AnyObject?) = message.parse(arr[i] as? NSArray)
                     instance.setValue(val, forKey: propertyName)
+
+                //  Unwrapping an optional enum
+                } else if let type = unwrap(property) as? Enum.Type {
+                    let val: (AnyObject?) = type(value: (arr[i] as! NSNumber))
+                    instance.setValue(val, forKey: propertyName)
+
+                //  Using a non-optional sub-struct
+                } else if let enumv = property as? Enum {
+                    let val: (AnyObject?) = enumv.dynamicType(value: (arr[i] as! NSNumber))
+                    instance.setValue(val, forKey: propertyName)
                 } else {
                     if arr[i] is NSNull {
                         instance.setValue(nil, forKey: propertyName)

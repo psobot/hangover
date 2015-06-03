@@ -25,23 +25,9 @@ func loadJavaScript(filename: String) -> NSDictionary? {
     return nil
 }
 
-//class MESSAGE_SEGMENT : Message {
-//    var type_: NSNumber = 0 // SegmentType
-//    var text: NSString?
-//
-//    class FORMATTING : Message {
-//        var bold: NSString?
-//        var italic: NSString?
-//        var strikethrough: NSString?
-//        var underline: NSString?
-//    }
-//    var formatting: FORMATTING?
-//
-//    class LINK_DATA : Message {
-//        var link_target: NSString?
-//    }
-//    var link_data: LINK_DATA?
-//}
+class EnumTestMessage : Message {
+    var enumValue = ConversationType()
+}
 
 class PBLiteTests: XCTestCase {
     override func setUp() {
@@ -80,5 +66,10 @@ class PBLiteTests: XCTestCase {
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.formatting)
         XCTAssertEqual("link target", segment.link_data!.link_target!)
+    }
+
+    func testEnum() {
+        let enumTestMessage = EnumTestMessage.parse([2])!
+        XCTAssertEqual(enumTestMessage.enumValue, ConversationType.GROUP)
     }
 }

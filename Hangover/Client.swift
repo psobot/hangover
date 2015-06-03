@@ -10,21 +10,15 @@
 //                     event, schemas)
 
 import Foundation
+import Alamofire
+import JavaScriptCore
 
 let ORIGIN_URL = "https://talkgadget.google.com"
 let IMAGE_UPLOAD_URL = "http://docs.google.com/upload/photos/resumable"
 let PVT_TOKEN_URL = "https://talkgadget.google.com/talkgadget/_/extension-start"
 let CHAT_INIT_URL = "https://talkgadget.google.com/u/0/talkgadget/_/chat"
-var CHAT_INIT_PARAMS: Dictionary<String, AnyObject?> = [
-    "prop": "aChromeExtension",
-    "fid": "gtn-roster-iframe-id",
-    "ec": "[\"ci:ec\",true,true,false]",
-    "pvt": nil, // Populated later
-]
 
-//CHAT_INIT_REGEX = re.compile(
-//    r"(?:<script>AF_initDataCallback\((.*?)\);</script>)", re.DOTALL
-//)
+let CHAT_INIT_REGEX = "(?:<script>AF_initDataCallback\\((.*?)\\);</script>)"
 
 // Timeout to send for setactiveclient requests:
 let ACTIVE_TIMEOUT_SECS = 120
@@ -32,6 +26,18 @@ let ACTIVE_TIMEOUT_SECS = 120
 let SETACTIVECLIENT_LIMIT_SECS = 60
 
 class Client {
+
+    let manager: Alamofire.Manager
+    var CHAT_INIT_PARAMS: Dictionary<String, AnyObject?> = [
+        "prop": "aChromeExtension",
+        "fid": "gtn-roster-iframe-id",
+        "ec": "[\"ci:ec\",true,true,false]",
+        "pvt": nil, // Populated later
+    ]
+
+    init(manager: Alamofire.Manager) {
+        self.manager = manager
+    }
 
     func connect() {
         let initial_data = self.initialize_chat()
@@ -53,6 +59,140 @@ class Client {
     }
 
     func initialize_chat() -> (Int) {
+        //Request push channel creation and initial chat data.
+        //
+        //Returns instance of InitialData.
+        //
+        //The response body is a HTML document containing a series of script tags
+        //containing JavaScript objects. We need to parse the objects to get at
+        //the data.
+
+        // We first need to fetch the 'pvt' token, which is required for the
+        // initialization request (otherwise it will return 400).
+
+        let prop = (CHAT_INIT_PARAMS["prop"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+        let fid = (CHAT_INIT_PARAMS["fid"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+        let ec = (CHAT_INIT_PARAMS["ec"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+        let url = "\(PVT_TOKEN_URL)?prop=\(prop)&fid=\(fid)&ec=\(ec)"
+        println("Fetching pvt token: \(url)")
+        var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+        manager.request(request).response { (
+            request: NSURLRequest,
+            response: NSHTTPURLResponse?,
+            responseObject: AnyObject?,
+            error: NSError?) in
+
+            // CHAT_INIT_PARAMS['pvt'] = javascript.loads(res.body.decode())[1]
+            let body = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
+
+            let ctx = JSContext()
+            let pvt: AnyObject = ctx.evaluateScript(body).toArray()[1] as! String
+            self.CHAT_INIT_PARAMS["pvt"] = pvt
+
+            // Now make the actual initialization request:
+            let prop = (self.CHAT_INIT_PARAMS["prop"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+            let fid = (self.CHAT_INIT_PARAMS["fid"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+            let ec = (self.CHAT_INIT_PARAMS["ec"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+            let pvt_enc = (self.CHAT_INIT_PARAMS["pvt"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+
+            let url = "\(CHAT_INIT_URL)?prop=\(prop)&fid=\(fid)&ec=\(ec)&pvt=\(pvt_enc)"
+            println("Initializing chat: \(url)")
+            var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+            self.manager.request(request).response { (
+                request: NSURLRequest,
+                response: NSHTTPURLResponse?,
+                responseObject: AnyObject?,
+                error: NSError?) in
+
+                let body = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
+                println(error?.description)
+                println(response?.description)
+                println("Received chat init response: '\(body)'")
+
+                // Parse the response by using a regex to find all the JS objects, and
+                // parsing them. Not everything will be parsable, but we don't care if
+                // an object we don't need can't be parsed.
+
+                var data_dict = Dictionary<String, AnyObject?>()
+                for data in Regex(CHAT_INIT_REGEX,
+                    options: NSRegularExpressionOptions.CaseInsensitive |
+                    NSRegularExpressionOptions.DotMatchesLineSeparators
+                ).matches(body) {
+
+                    if data.rangeOfString("data:function") == nil {
+                        let dict = JSContext().evaluateScript("a = " + data).toDictionary()!
+                        data_dict[dict["key"] as! String] = dict["data"]
+                    } else {
+                        var cleanedData = data
+                        cleanedData = cleanedData.stringByReplacingOccurrencesOfString(
+                            "data:function(){return", withString: "data:")
+                        cleanedData = cleanedData.stringByReplacingOccurrencesOfString(
+                            "}}", withString: "}")
+                        if let dict = JSContext().evaluateScript("a = " + cleanedData).toDictionary() {
+                            data_dict[dict["key"] as! String] = dict["data"]
+                        } else {
+                            println("Could not parse!")
+                        }
+                    }
+                }
+                let api_key = ((data_dict["ds:7"] as! NSArray)[0] as! NSArray)[2] as! String
+                let email = ((data_dict["ds:33"] as! NSArray)[0] as! NSArray)[2] as! String
+                let header_date = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[4] as! String
+                let header_version = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[6] as! String
+                let header_id = ((data_dict["ds:4"] as! NSArray)[0] as! NSArray)[7] as! String
+
+                let sync_timestamp = (((data_dict["ds:21"] as! NSArray)[0] as! NSArray)[1] as! NSArray)[4] as! NSNumber
+                //  parse timestamp call needed here
+
+                let self_entity = CLIENT_GET_SELF_INFO_RESPONSE.parse((data_dict["ds:20"] as! NSArray)[0] as? NSArray)
+                println("Self entity: \(self_entity)")
+
+            }
+        }
+
+//        # Parse the entity representing the current user.
+//        self_entity = schemas.CLIENT_GET_SELF_INFO_RESPONSE.parse(
+//            # cgsirp?
+//            # data_dict['ds:20'][0]
+//            # data_dict['ds:35'][0]
+//            data_dict['ds:20'][0]
+//        ).self_entity
+//
+//        # Parse every existing conversation's state, including participants.
+//        initial_conv_states = schemas.CLIENT_CONVERSATION_STATE_LIST.parse(
+//            # csrcrp?
+//            # data_dict['ds:19'][0][3]
+//            # data_dict['ds:36'][0][3]
+//            data_dict['ds:19'][0][3]
+//        )
+//        initial_conv_parts = []
+//        for conv_state in initial_conv_states:
+//            initial_conv_parts.extend(conv_state.conversation.participant_data)
+//
+//        # Parse the entities for the user's contacts (doesn't include users not
+//        # in contacts). If this fails, continue without the rest of the
+//        # entities.
+//        initial_entities = []
+//        try:
+//            entities = schemas.INITIAL_CLIENT_ENTITIES.parse(
+//                # cgserp?
+//                # data_dict['ds:21'][0]
+//                # data_dict['ds:37'][0]
+//                data_dict['ds:21'][0]
+//            )
+//        except ValueError as e:
+//            logger.warning('Failed to parse initial client entities: {}'
+//                           .format(e))
+//        else:
+//            initial_entities.extend(entities.entities)
+//            initial_entities.extend(e.entity for e in itertools.chain(
+//                entities.group1.entity, entities.group2.entity,
+//                entities.group3.entity, entities.group4.entity,
+//                entities.group5.entity
+//            ))
+//
+//        return InitialData(initial_conv_states, self_entity, initial_entities,
+//                           initial_conv_parts, _sync_timestamp)
         return 1
     }
 }

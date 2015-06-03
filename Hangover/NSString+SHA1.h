@@ -11,3 +11,5 @@
 @interface NSString (SHA1)
 - (NSString *)SHA1;
 @end
+
+void printKeyValuePairs(NSObject *self);

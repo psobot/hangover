@@ -31,11 +31,11 @@ class Field {
         self.is_optional = is_optional
     }
 
-    func parse(input: String?) -> String? {
+    func parse(input: AnyObject?) -> AnyObject? {
         return input
     }
 
-    func serialize(input: String?) -> String? {
+    func serialize(input: AnyObject?) -> AnyObject? {
         return self.parse(input)
     }
 }
@@ -57,119 +57,119 @@ class EnumField<_enum: GoogleEnum> {
     }
 }
 
-//class RepeatedField(object):
-//
-//    """A field which may be repeated any number of times.
-//
-//    Corresponds to a list.
-//    """
-//
-//    def __init__(self, field, is_optional=False):
-//        self._field = field
-//        self._is_optional = is_optional
-//
-//    def parse(self, input_, serialize=False):
-//        """Parse the message.
-//
-//        Raises ValueError if the input is None and the RepeatedField is not
-//        optional, or if the input is not a list.
-//        """
-//        # Validate input:
-//        if input_ is None and not self._is_optional:
-//            raise ValueError('RepeatedField is not optional')
-//        elif input_ is None and self._is_optional:
-//            return None
-//        elif not isinstance(input_, list):
-//            raise ValueError('RepeatedField expected list but got {}'
-//                             .format(type(input_)))
-//
-//        res = []
-//        for field_input in input_:
-//            try:
-//                if serialize:
-//                    res.append(self._field.serialize(field_input))
-//                else:
-//                    res.append(self._field.parse(field_input))
-//            except ValueError as e:
-//                raise ValueError('RepeatedField item: {}'.format(e))
-//        return res
-//
-//    def serialize(self, input_):
-//        """Serialize the message.
-//
-//        Raises ValueError if the input is None and the RepeatedField is not
-//        optional, or if the input is not a list.
-//        """
-//        return self.parse(input_, serialize=True)
-//
-//
-//class Message(object):
-//
-//    """A field consisting of a collection of fields paired with a name.
-//
-//    Corresponds to an object (SimpleNamespace).
-//
-//    The input may be shorter than the number of fields and the trailing fields
-//    will be assigned None. The input may be longer than the number of fields
-//    and the trailing input items will be ignored. Fields with name None will
-//    cause the corresponding input item to be optional and ignored.
-//
-//    """
-//
-//    def __init__(self, *args, is_optional=False):
-//        self._name_field_pairs = args
-//        self._is_optional = is_optional
-//
-//    def parse(self, input_):
-//        """Parse the message.
-//
-//        Raises ValueError if the input is None and the Message is not optional,
-//        or if any of the contained Fields fail to parse.
-//        """
-//        # Validate input:
-//        if input_ is None and not self._is_optional:
-//            raise ValueError('Message is not optional')
-//        elif input_ is None and self._is_optional:
-//            return None
-//        elif not isinstance(input_, list):
-//            raise ValueError('Message expected list but got {}'
-//                             .format(type(input_)))
-//
-//        # Pad input with Nones if necessary
-//        input_ = itertools.chain(input_, itertools.repeat(None))
-//        res = types.SimpleNamespace()
-//        for (name, field), field_input in zip(self._name_field_pairs, input_):
-//            if name is not None:
-//                try:
-//                    p = field.parse(field_input)
-//                except ValueError as e:
-//                    raise ValueError('Message field \'{}\': {}'.
-//                                     format(name, e))
-//                setattr(res, name, p)
-//        return res
-//
-//    def serialize(self, input_):
-//        """Serialize the message.
-//
-//        Raises ValueError if the input is None and the Message is not optional,
-//        or if any of the contained Fields fail to parse.
-//        """
-//        # Validate input:
-//        if input_ is None and not self._is_optional:
-//            raise ValueError('Message is not optional')
-//        elif input_ is None and self._is_optional:
-//            return None
-//        elif not isinstance(input_, types.SimpleNamespace):
-//            raise ValueError(
-//                'Message expected types.SimpleNamespace but got {}'
-//                .format(type(input_))
-//            )
-//
-//        res = []
-//        for name, field in self._name_field_pairs:
-//            if name is not None:
-//                field_input = getattr(input_, name)
-//                res.append(field.serialize(field_input))
-//            else:
-//                res.append(None)
-//        return res
+class RepeatedField {
+    // A field which may be repeated any number of times.
+    let field: Field
+    let is_optional: Bool
+
+    init(field: Field, is_optional: Bool = false) {
+        self.field = field
+        self.is_optional = is_optional
+    }
+
+    func parse(input: AnyObject?, serialize: Bool = false) -> AnyObject? {
+        if input == nil && !is_optional {
+            //  raise error? not an optional field
+            return nil
+        } else if input == nil && is_optional {
+            return nil
+        }
+
+        if let arr = input as? NSArray {
+            return map(arr) { (field_input: AnyObject?) in
+                if serialize {
+                    return self.field.serialize(field_input)!
+                } else {
+                    return self.field.parse(field_input)!
+                }
+            }
+        } else {
+            //  Raise error: expecting array
+            return nil
+        }
+    }
+
+    func serialize(input: AnyObject?) -> AnyObject? {
+        return self.parse(input, serialize: true)
+    }
+}
+
+typealias OptionalField = AnyObject?
+
+func unwrap(any:Any) -> Any? {
+    let mi:MirrorType = reflect(any)
+    if mi.disposition != .Optional {
+        return any
+    }
+    if mi.count == 0 { return nil } // Optional.None
+    let (name,some) = mi[0]
+    return some.valueType
+}
+
+class Message : NSObject {
+    required override init() { }
+    class func isOptional() -> Bool { return false }
+
+    func parse(input: NSArray?) -> Self? { return self.dynamicType.parse(input) }
+    class func parse(input: NSArray?) -> Self? {
+        if input == nil && !isOptional() {
+            //  raise error? not an optional field
+            return nil
+        } else if input == nil && isOptional() {
+            return nil
+        }
+
+        if let arr = input {
+            var instance = self()
+            let reflection = reflect(instance)
+            for var i = 0; i < min(arr.count, reflection.count - 1); i++ {
+                let propertyName = reflection[i + 1].0
+                let property = reflection[i + 1].1.value
+
+                //  Unwrapping an optional sub-struct
+                if let type = unwrap(property) as? Message.Type {
+                    let val: (AnyObject?) = type.parse(arr[i] as? NSArray)
+                    instance.setValue(val, forKey: propertyName)
+
+                //  Using a non-optional sub-struct
+                } else if let message = property as? Message {
+                    let val: (AnyObject?) = message.parse(arr[i] as? NSArray)
+                    instance.setValue(val, forKey: propertyName)
+                } else {
+                    if arr[i] is NSNull {
+                        instance.setValue(nil, forKey: propertyName)
+                    } else {
+                        instance.setValue(arr[i], forKey: propertyName)
+                    }
+                }
+            }
+            return instance
+        } else {
+            //  Raise error: expecting array
+            return nil
+        }
+    }
+
+    func serialize(input: AnyObject?) -> AnyObject? {
+        //        # Validate input:
+        //        if input_ is None and not self._is_optional:
+        //            raise ValueError('Message is not optional')
+        //        elif input_ is None and self._is_optional:
+        //            return None
+        //        elif not isinstance(input_, types.SimpleNamespace):
+        //            raise ValueError(
+        //                'Message expected types.SimpleNamespace but got {}'
+        //                .format(type(input_))
+        //            )
+        //
+        //        res = []
+        //        for name, field in self._name_field_pairs:
+        //            if name is not None:
+        //                field_input = getattr(input_, name)
+        //                res.append(field.serialize(field_input))
+        //            else:
+        //                res.append(None)
+        //        return res
+        return nil
+    }
+}

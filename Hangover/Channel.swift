@@ -10,6 +10,10 @@ import Foundation
 import Alamofire
 import JavaScriptCore
 
+@objc protocol ChannelDelegate {
+    optional func onMessage(message: NSString)
+}
+
 class Channel {
     static let ORIGIN_URL = "https://talkgadget.google.com"
     let CHANNEL_URL_PREFIX = "https://0.client-channel.google.com/client-channel"
@@ -35,7 +39,11 @@ class Channel {
     var retries = MAX_RETRIES // number of remaining retries
     var need_new_sid = true   // whether a new SID is needed
 
-    var manager: Alamofire.Manager?
+    let manager: Alamofire.Manager
+
+    init(manager: Alamofire.Manager) {
+        self.manager = manager
+    }
 
     func getCookieValue(key: String) -> String? {
         if let c = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies {
@@ -50,57 +58,54 @@ class Channel {
     }
 
     func listen() {
-        withAuthenticatedManager(loadCodes()!.access_token) { (manager: Alamofire.Manager) in
-            self.manager = manager
-            // Listen for messages on the channel.
+        // Listen for messages on the channel.
 
-            if self.retries >= 0 {
-                // After the first failed retry, back off exponentially longer after
-                // each attempt.
-                if self.retries + 1 < Channel.MAX_RETRIES {
-                    let backoff_seconds = UInt64(2 << (Channel.MAX_RETRIES - self.retries))
-                    NSLog("Backing off for \(backoff_seconds) seconds")
-                    usleep(useconds_t(backoff_seconds * USEC_PER_SEC))
-                }
-
-                // Request a new SID if we don't have one yet, or the previous one
-                // became invalid.
-                if self.need_new_sid {
-                    // TODO: error handling
-                    self.fetchChannelSID()
-                    return
-                }
-
-                // Clear any previous push data, since if there was an error it
-                // could contain garbage.
-                self.pushParser = PushDataParser()
-                self.startRequest()
-
-    //            if let error = () {
-    //                NSLog("Long-polling request failed: \(error)")
-    //                retries -= 1
-    //                if isConnected {
-    //                    isConnected = false
-    //                }
-
-                    //self.on_disconnect.fire()
-
-    //                if isinstance(e, UnknownSIDError) {
-    //                    need_new_sid = true
-    //                }
-    //            } else {
-                    // The connection closed successfully, so reset the number of
-                    // retries.
-    //                retries = Channel.MAX_RETRIES
-    //            }
-
-                // If the request ended with an error, the client must account for
-                // messages being dropped during this time.
-            } else {
-                NSLog("Listen failed due to no retries left.");
+        if self.retries >= 0 {
+            // After the first failed retry, back off exponentially longer after
+            // each attempt.
+            if self.retries + 1 < Channel.MAX_RETRIES {
+                let backoff_seconds = UInt64(2 << (Channel.MAX_RETRIES - self.retries))
+                NSLog("Backing off for \(backoff_seconds) seconds")
+                usleep(useconds_t(backoff_seconds * USEC_PER_SEC))
             }
-            // logger.error('Ran out of retries for long-polling request')
+
+            // Request a new SID if we don't have one yet, or the previous one
+            // became invalid.
+            if self.need_new_sid {
+                // TODO: error handling
+                self.fetchChannelSID()
+                return
+            }
+
+            // Clear any previous push data, since if there was an error it
+            // could contain garbage.
+            self.pushParser = PushDataParser()
+            self.startRequest()
+
+//            if let error = () {
+//                NSLog("Long-polling request failed: \(error)")
+//                retries -= 1
+//                if isConnected {
+//                    isConnected = false
+//                }
+
+                //self.on_disconnect.fire()
+
+//                if isinstance(e, UnknownSIDError) {
+//                    need_new_sid = true
+//                }
+//            } else {
+                // The connection closed successfully, so reset the number of
+                // retries.
+//                retries = Channel.MAX_RETRIES
+//            }
+
+            // If the request ended with an error, the client must account for
+            // messages being dropped during this time.
+        } else {
+            NSLog("Listen failed due to no retries left.");
         }
+        // logger.error('Ran out of retries for long-polling request')
     }
 
     func startRequest() {
@@ -126,7 +131,7 @@ class Channel {
             request.setValue(v, forHTTPHeaderField: k)
         }
         println("Making request to URL: \(url)")
-        manager!.request(request).response(onResponse)
+        manager.request(request).response(onResponse)
       
 
 //        except asyncio.TimeoutError:
@@ -200,7 +205,7 @@ class Channel {
         }
         let data = "count=0".dataUsingEncoding(NSUTF8StringEncoding)!
         isSubscribed = false
-        manager!.upload(URLRequest, data: data).response(onChannelSIDResponse)
+        manager.upload(URLRequest, data: data).response(onChannelSIDResponse)
     }
 
     private func onResponse(
@@ -215,7 +220,39 @@ class Channel {
                 NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
                 self.need_new_sid = true
                 listen()
+            } else if response?.statusCode == 200 {
+                onPushData(responseObject as! NSData)
+            } else {
+                NSLog("Received unknown response code \(response?.statusCode)")
+                NSLog(NSString(data: responseObject as! NSData, encoding: 4)! as String)
             }
+        }
+    }
+
+    private func onPushData(data: NSData) {
+        // Delay subscribing until first byte is received prevent "channel not
+        // ready" errors that appear to be caused by a race condition on the
+        // server.
+        if !isSubscribed {
+            // subscribe()
+            return
+        }
+
+        // This method is only called when the long-polling request was
+        // successful, so use it to trigger connection events if necessary.
+        if isConnected {
+            if onConnectCalled {
+                isConnected = true
+                // yield from self.on_reconnect.fire()
+            } else {
+                onConnectCalled = true
+                isConnected = true
+                //yield from self.on_connect.fire()
+            }
+        }
+
+        for submission in pushParser.getSubmissions(data) {
+            // yield from self.on_message.fire(submission)
         }
     }
 

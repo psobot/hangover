@@ -20,6 +20,13 @@
 		33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5F1B1C0B0800C81DC3 /* Manager.swift */; };
 		33405A611B1C0F8400C81DC3 /* Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5D1B1BF89E00C81DC3 /* Auth.swift */; };
 		33405A621B1C0F8800C81DC3 /* Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5F1B1C0B0800C81DC3 /* Manager.swift */; };
+		33405A661B1D3D6C00C81DC3 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A651B1D3D6C00C81DC3 /* LoginViewController.swift */; };
+		33405A671B1D490700C81DC3 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A651B1D3D6C00C81DC3 /* LoginViewController.swift */; };
+		33405A691B1E6A6B00C81DC3 /* PBLiteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A681B1E6A6B00C81DC3 /* PBLiteTests.swift */; };
+		33405A6B1B1E6A9700C81DC3 /* ds20.js in Resources */ = {isa = PBXBuildFile; fileRef = 33405A6A1B1E6A9700C81DC3 /* ds20.js */; };
+		33405A6D1B1E6CF100C81DC3 /* ds20.js in Resources */ = {isa = PBXBuildFile; fileRef = 33405A6A1B1E6A9700C81DC3 /* ds20.js */; };
+		33405A6F1B1E6EB800C81DC3 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A6E1B1E6EB800C81DC3 /* Schema.swift */; };
+		33405A701B1E817400C81DC3 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A6E1B1E6EB800C81DC3 /* Schema.swift */; };
 		33806E271B1A6875007C6BE4 /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
 		33806E281B1A6875007C6BE4 /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
 		33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */; };
@@ -59,6 +66,10 @@
 		33405A5B1B153E5200C81DC3 /* Channel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
 		33405A5D1B1BF89E00C81DC3 /* Auth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Auth.swift; sourceTree = "<group>"; };
 		33405A5F1B1C0B0800C81DC3 /* Manager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Manager.swift; sourceTree = "<group>"; };
+		33405A651B1D3D6C00C81DC3 /* LoginViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		33405A681B1E6A6B00C81DC3 /* PBLiteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PBLiteTests.swift; sourceTree = "<group>"; };
+		33405A6A1B1E6A9700C81DC3 /* ds20.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = ds20.js; path = data/ds20.js; sourceTree = "<group>"; };
+		33405A6E1B1E6EB800C81DC3 /* Schema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
 		33806E241B1A6875007C6BE4 /* HangoverTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HangoverTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		33806E251B1A6875007C6BE4 /* NSString+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+SHA1.h"; sourceTree = "<group>"; };
 		33806E261B1A6875007C6BE4 /* NSString+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+SHA1.m"; sourceTree = "<group>"; };
@@ -121,6 +132,7 @@
 				33368DBB1B12ACD4009B28B2 /* AppDelegate.swift */,
 				33368DBD1B12ACD4009B28B2 /* ViewController.swift */,
 				33368DD81B12B545009B28B2 /* PBLite.swift */,
+				33405A6E1B1E6EB800C81DC3 /* Schema.swift */,
 				33368DDB1B15393D009B28B2 /* Client.swift */,
 				33405A5B1B153E5200C81DC3 /* Channel.swift */,
 				33405A5F1B1C0B0800C81DC3 /* Manager.swift */,
@@ -129,6 +141,7 @@
 				33E9F5C31B1A2CFE0027F7EC /* Regex.swift */,
 				33368DBF1B12ACD4009B28B2 /* Images.xcassets */,
 				33368DC11B12ACD4009B28B2 /* Main.storyboard */,
+				33405A651B1D3D6C00C81DC3 /* LoginViewController.swift */,
 				33368DB91B12ACD4009B28B2 /* Supporting Files */,
 				33E9F5BF1B1A1D9F0027F7EC /* Hangover-Bridging-Header.h */,
 				33806E241B1A6875007C6BE4 /* HangoverTests-Bridging-Header.h */,
@@ -151,6 +164,8 @@
 			children = (
 				33368DCE1B12ACD4009B28B2 /* HangoverTests.swift */,
 				33E9F5CA1B1A3A930027F7EC /* ChannelTests.swift */,
+				33405A681B1E6A6B00C81DC3 /* PBLiteTests.swift */,
+				33405A6C1B1E6AD600C81DC3 /* Data */,
 				33368DCC1B12ACD4009B28B2 /* Supporting Files */,
 			);
 			path = HangoverTests;
@@ -162,6 +177,14 @@
 				33368DCD1B12ACD4009B28B2 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		33405A6C1B1E6AD600C81DC3 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				33405A6A1B1E6A9700C81DC3 /* ds20.js */,
+			);
+			name = Data;
 			sourceTree = "<group>";
 		};
 		436130E2D699EC081568747A /* Frameworks */ = {
@@ -271,6 +294,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33405A6D1B1E6CF100C81DC3 /* ds20.js in Resources */,
 				33368DC01B12ACD4009B28B2 /* Images.xcassets in Resources */,
 				33368DC31B12ACD4009B28B2 /* Main.storyboard in Resources */,
 			);
@@ -280,6 +304,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33405A6B1B1E6A9700C81DC3 /* ds20.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,6 +408,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33405A6F1B1E6EB800C81DC3 /* Schema.swift in Sources */,
 				33806E271B1A6875007C6BE4 /* NSString+SHA1.m in Sources */,
 				33368DBE1B12ACD4009B28B2 /* ViewController.swift in Sources */,
 				33405A5C1B153E5200C81DC3 /* Channel.swift in Sources */,
@@ -393,6 +419,7 @@
 				33368DD91B12B545009B28B2 /* PBLite.swift in Sources */,
 				33405A5E1B1BF89E00C81DC3 /* Auth.swift in Sources */,
 				33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */,
+				33405A661B1D3D6C00C81DC3 /* LoginViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,14 +427,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33405A701B1E817400C81DC3 /* Schema.swift in Sources */,
 				33E9F5C61B1A37790027F7EC /* String+Extensions.swift in Sources */,
 				33E9F5CB1B1A3A930027F7EC /* ChannelTests.swift in Sources */,
+				33405A691B1E6A6B00C81DC3 /* PBLiteTests.swift in Sources */,
 				33E9F5C71B1A377B0027F7EC /* Regex.swift in Sources */,
 				33368DCF1B12ACD4009B28B2 /* HangoverTests.swift in Sources */,
 				33E9F5C51B1A37770027F7EC /* Channel.swift in Sources */,
 				33368DDA1B12B5C4009B28B2 /* PBLite.swift in Sources */,
 				33806E281B1A6875007C6BE4 /* NSString+SHA1.m in Sources */,
 				33405A621B1C0F8800C81DC3 /* Manager.swift in Sources */,
+				33405A671B1D490700C81DC3 /* LoginViewController.swift in Sources */,
 				33405A611B1C0F8400C81DC3 /* Auth.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

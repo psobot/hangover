@@ -12,11 +12,11 @@ class Regex {
   let internalExpression: NSRegularExpression
   let pattern: String
 
-  init(_ pattern: String) {
-    self.pattern = pattern
-    var error: NSError?
-    self.internalExpression = NSRegularExpression(pattern: pattern, options: .CaseInsensitive, error: &error)!
-  }
+    init(_ pattern: String, options: NSRegularExpressionOptions = .CaseInsensitive) {
+        self.pattern = pattern
+        var error: NSError?
+        self.internalExpression = NSRegularExpression(pattern: pattern, options: options, error: &error)!
+    }
 
   func test(input: String) -> Bool {
     let matches = self.internalExpression.matchesInString(input, options:nil, range:NSMakeRange(0, count(input)))
@@ -29,4 +29,11 @@ class Regex {
     ) as! [NSTextCheckingResult]
     return map(results) { input.substringWithRange(input.convertRangeFromNSRange($0.range)) }
   }
+
+    func matches(input: String) -> [String] {
+        let results: [NSTextCheckingResult] = self.internalExpression.matchesInString(
+            input, options:nil, range:NSMakeRange(0, count(input))
+            ) as! [NSTextCheckingResult]
+        return map(results) { input.substringWithRange(input.convertRangeFromNSRange($0.rangeAtIndex(1))) }
+    }
 }

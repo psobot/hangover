@@ -1,4 +1,4 @@
-  //
+//
 //  AppDelegate.swift
 //  Hangover
 //
@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Alamofire
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -15,7 +16,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        auth_with_code { (access_token: String, refresh_token: String) in
 //            println("access: \(access_token), refresh: \(refresh_token)")
 //        }
-        Channel().listen()
+
+        withAuthenticatedManager { (manager: Alamofire.Manager) in
+            Channel(manager: manager).listen()
+            Client(manager: manager).connect()
+        }
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {

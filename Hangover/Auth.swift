@@ -42,15 +42,17 @@ func saveCodes(access_token: String, refresh_token: String) {
     defaults.synchronize()
 }
 
-func auth_with_code(cb: (access_token: String, refresh_token: String) -> Void) {
+func clearCodes() {
+    let defaults = NSUserDefaults.standardUserDefaults()
+    defaults.removeObjectForKey("access_token")
+    defaults.removeObjectForKey("refresh_token")
+    defaults.synchronize()
+}
+
+func auth_with_code(auth_code: String, cb: (access_token: String, refresh_token: String) -> Void) {
     // Authenticate using OAuth authentication code.
     // Raises GoogleAuthError authentication fails.
     // Return access token string.
-
-    println(OAUTH2_LOGIN_URL)
-
-    // Get authentication code from user.
-    var auth_code = "4/2b1XTOLA8JfqDpOh9Xlt6TiUeNCyeDpfe_y8_K2aomE.8pD53yUFS9gVJvIeHux6iLZXbyVamwI"
 
     // Make a token request.
     let token_request_data = [
@@ -66,16 +68,20 @@ func auth_with_code(cb: (access_token: String, refresh_token: String) -> Void) {
     }
 }
 
-func auth_with_refresh_token(refresh_token: String, cb: (access_token: String, refresh_token: String) -> Void) {
+func auth_with_refresh_token(
+    manager: Alamofire.Manager,
+    refresh_token: String,
+    cb: (access_token: String, refresh_token: String) -> Void
+) {
     let token_request_data = [
         "client_id": OAUTH2_CLIENT_ID,
         "client_secret": OAUTH2_CLIENT_SECRET,
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
     ]
-    Alamofire.request(.POST, OAUTH2_TOKEN_REQUEST_URL, parameters: token_request_data).responseJSON {
+    manager.request(.POST, OAUTH2_TOKEN_REQUEST_URL, parameters: token_request_data).responseJSON {
         (request, response, JSON, error) in
-        cb(access_token: JSON!["access_token"] as! String, refresh_token: JSON!["refresh_token"] as! String)
+        cb(access_token: JSON!["access_token"] as! String, refresh_token: refresh_token)
     }
 }
 
@@ -98,31 +104,61 @@ func auth_with_refresh_token(refresh_token: String, cb: (access_token: String, r
 //    return _get_session_cookies(access_token)
 //}
 
-func withAuthenticatedManager(
-    access_token: String,
-    cb: (manager: Alamofire.Manager) -> Void
-) {
-    let manager = configureManager()
+func withAuthenticatedManager(cb: (manager: Alamofire.Manager) -> Void) {
+    withAuthenticatedManager(configureManager(), cb)
+}
 
-    let url = "https://accounts.google.com/accounts/OAuthLogin?source=hangups&issueuberauth=1"
-    var request = NSMutableURLRequest(URL: NSURL(string: url)!)
-    request.setValue("Bearer \(access_token)", forHTTPHeaderField: "Authorization")
-    manager.request(request).response { (request, response, responseObject, error) in
-        var uberauth = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
-        uberauth.replaceRange(Range<String.Index>(
-            start: advance(uberauth.endIndex, -1),
-            end: uberauth.endIndex
-        ), with: "")
+func withAuthenticatedManager(manager: Alamofire.Manager, cb: (manager: Alamofire.Manager) -> Void) {
+    // This method should *not* take an access_token, and pop up a window with web view
+    // to authenticate the user with Google, if possible.
+    if let codes = loadCodes() {
+        auth_with_refresh_token(manager, codes.refresh_token) { (access_token: String, refresh_token: String) in
+            println("Auth'd with refresh token. New access token: \(access_token)")
 
-        var request = NSMutableURLRequest(URL: NSURL(string: "https://accounts.google.com/MergeSession")!)
-        request.setValue("Bearer \(access_token)", forHTTPHeaderField: "Authorization")
-        manager.request(request).response { (request, response, responseObject, error) in
-            let url = "https://accounts.google.com/MergeSession?service=mail&continue=http://www.google.com&uberauth=\(uberauth)"
+            let url = "https://accounts.google.com/accounts/OAuthLogin?source=hangups&issueuberauth=1"
             var request = NSMutableURLRequest(URL: NSURL(string: url)!)
             request.setValue("Bearer \(access_token)", forHTTPHeaderField: "Authorization")
             manager.request(request).response { (request, response, responseObject, error) in
-                cb(manager: manager)
+                var uberauth = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
+                uberauth.replaceRange(Range<String.Index>(
+                    start: advance(uberauth.endIndex, -1),
+                    end: uberauth.endIndex
+                    ), with: "")
+
+                var request = NSMutableURLRequest(URL: NSURL(string: "https://accounts.google.com/MergeSession")!)
+                request.setValue("Bearer \(access_token)", forHTTPHeaderField: "Authorization")
+                manager.request(request).response { (request, response, responseObject, error) in
+                    let url = "https://accounts.google.com/MergeSession?service=mail&continue=http://www.google.com&uberauth=\(uberauth)"
+                    var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+                    request.setValue("Bearer \(access_token)", forHTTPHeaderField: "Authorization")
+                    manager.request(request).response { (request, response, responseObject, error) in
+                        cb(manager: manager)
+                    }
+                }
             }
         }
+    } else {
+        promptForGoogleLogin(manager) {
+            println("Got callback, codes now \(loadCodes())")
+            withAuthenticatedManager(manager, cb)
+        }
     }
+}
+
+var loginWindowController: NSWindowController?
+func promptForGoogleLogin(manager: Alamofire.Manager, cb: () -> Void) {
+    let storyboard = NSStoryboard(name: "Main", bundle: nil)!
+
+    loginWindowController = storyboard.instantiateControllerWithIdentifier("LoginWindowController") as? NSWindowController
+
+    let loginViewController = loginWindowController?.contentViewController as? LoginViewController
+    loginViewController?.manager = manager
+    loginViewController?.cb = { (auth_code: String) in
+        auth_with_code(auth_code, { (access_token, refresh_token) -> Void in
+            saveCodes(access_token, refresh_token)
+            cb()
+        })
+    }
+
+    loginWindowController!.showWindow(nil)
 }

@@ -157,7 +157,7 @@ class CLIENT_CONVERSATION : Message {
         var status: ClientConversationStatus = 0
         var notification_level: ClientNotificationLevel = 0
 
-        var view = NSArray() // [ClientConversationView]
+        var view = [ClientConversationView]()
 
         var inviter_id = USER_ID()
         var invite_timestamp: NSString = ""
@@ -180,19 +180,19 @@ class CLIENT_CONVERSATION : Message {
         var last_read_timestamp: NSString = ""
     }
 
-    var read_state = NSArray() // [READ_STATE]
+    var read_state = [READ_STATE]()
     var field4: OptionalField = nil
     var otr_status: OffTheRecordStatus = 0
     var field5: OptionalField = nil
     var field6: OptionalField = nil
-    var current_participant = NSArray() // [USER_ID]
+    var current_participant = [USER_ID]()
 
     class PARTICIPANT_DATA : Message {
         var id_ = USER_ID()
         var fallback_name: NSString?
         var field: OptionalField = nil
     }
-    var participant_data = NSArray() // [PARTICIPANT_DATA]
+    var participant_data = [PARTICIPANT_DATA]()
 
     var field7: OptionalField = nil
     var field8: OptionalField = nil
@@ -219,145 +219,139 @@ class MESSAGE_SEGMENT : Message {
     var link_data: LINK_DATA? = LINK_DATA()
 }
 
-//MESSAGE_ATTACHMENT = Message(
-//    ('embed_item', Message(
-//        # 249 (PLUS_PHOTO), 340, 335, 0
-//        ('type_', RepeatedField(Field())),
-//        ('data', Field()),  # can be a dict
-//    )),
-//)
+class MESSAGE_ATTACHMENT : Message {
+    class EMBED_ITEM : Message {
+        var type_ = NSArray()
+        var data = NSDictionary()
+    }
+    var embed_item = EMBED_ITEM()
+}
 
-//CLIENT_CHAT_MESSAGE = Message(
-//    (None, Field(is_optional=True)),  # always None?
-//    ('annotation', RepeatedField(Field(), is_optional=True)),
-//('message_content', Message(
-//('segment', RepeatedField(MESSAGE_SEGMENT, is_optional=True)),
-//('attachment', RepeatedField(MESSAGE_ATTACHMENT, is_optional=True)),
-//)),
-//is_optional=True,
-//)
-//
-//CLIENT_CONVERSATION_RENAME = Message(
-//('new_name', Field()),
-//('old_name', Field()),
-//is_optional=True,
-//)
-//
-//CLIENT_HANGOUT_EVENT = Message(
-//('event_type', EnumField(ClientHangoutEventType)),
-//('participant_id', RepeatedField(USER_ID)),
-//('hangout_duration_secs', Field(is_optional=True)),
-//('transferred_conversation_id', Field(is_optional=True)),  # always None?
-//('refresh_timeout_secs', Field(is_optional=True)),
-//('is_periodic_refresh', Field(is_optional=True)),
-//(None, Field(is_optional=True)),  # always 1?
-//is_optional=True,
-//)
-//
-//CLIENT_OTR_MODIFICATION = Message(
-//('old_otr_status', EnumField(OffTheRecordStatus)),
-//('new_otr_status', EnumField(OffTheRecordStatus)),
-//('old_otr_toggle', EnumField(ClientOffTheRecordToggle)),
-//('new_otr_toggle', EnumField(ClientOffTheRecordToggle)),
-//is_optional=True,
-//)
-//
-//CLIENT_MEMBERSHIP_CHANGE = Message(
-//('type_', EnumField(MembershipChangeType)),
-//(None, RepeatedField(Field())),
-//('participant_ids', RepeatedField(USER_ID)),
-//(None, Field()),
-//is_optional=True,
-//)
-//
-//CLIENT_EVENT = Message(
-//('conversation_id', CONVERSATION_ID),
-//('sender_id', OPTIONAL_USER_ID),
-//('timestamp', Field()),
-//('self_event_state', Message(
-//('user_id', USER_ID),
-//('client_generated_id', Field(is_optional=True)),
-//('notification_level', EnumField(ClientNotificationLevel)),
-//is_optional=True,
-//)),
-//(None, Field(is_optional=True)),  # always None?
-//(None, Field(is_optional=True)),  # always 0? (expiration_timestamp?)
-//('chat_message', CLIENT_CHAT_MESSAGE),
-//(None, Field(is_optional=True)),  # always None?
-//('membership_change', CLIENT_MEMBERSHIP_CHANGE),
-//('conversation_rename', CLIENT_CONVERSATION_RENAME),
-//('hangout_event', CLIENT_HANGOUT_EVENT),
-//('event_id', Field(is_optional=True)),
-//('advances_sort_timestamp', Field(is_optional=True)),
-//('otr_modification', CLIENT_OTR_MODIFICATION),
-//(None, Field(is_optional=True)),  # 0, 1 or None? related to notifications?
-//('event_otr', EnumField(OffTheRecordStatus)),
-//(None, Field()),  # always 1? (advances_sort_timestamp?)
-//)
-//
-//CLIENT_EVENT_NOTIFICATION = Message(
-//('event', CLIENT_EVENT),
-//is_optional=True,
-//)
-//
-//CLIENT_WATERMARK_NOTIFICATION = Message(
-//('participant_id', USER_ID),
-//('conversation_id', CONVERSATION_ID),
-//('latest_read_timestamp', Field()),
-//is_optional=True,
-//)
-//
-//CLIENT_STATE_UPDATE_HEADER = Message(
-//('active_client_state', EnumField(ActiveClientState)),
-//(None, Field(is_optional=True)),
-//('request_trace_id', Field()),
-//(None, Field(is_optional=True)),
-//('current_server_time', Field()),
-//(None, Field(is_optional=True)),
-//(None, Field(is_optional=True)),
-//# optional ID of the client causing the update?
-//(None, Field(is_optional=True)),
-//)
-//
-//CLIENT_STATE_UPDATE = Message(
-//('state_update_header', CLIENT_STATE_UPDATE_HEADER),
-//('conversation_notification', Field(is_optional=True)),  # always None?
-//('event_notification', CLIENT_EVENT_NOTIFICATION),
-//('focus_notification', CLIENT_SET_FOCUS_NOTIFICATION),
-//('typing_notification', CLIENT_SET_TYPING_NOTIFICATION),
-//('notification_level_notification', Field(is_optional=True)),
-//('reply_to_invite_notification', Field(is_optional=True)),
-//('watermark_notification', CLIENT_WATERMARK_NOTIFICATION),
-//(None, Field(is_optional=True)),
-//('settings_notification', Field(is_optional=True)),
-//('view_modification', Field(is_optional=True)),
-//('easter_egg_notification', Field(is_optional=True)),
-//('client_conversation', CLIENT_CONVERSATION),
-//('self_presence_notification', Field(is_optional=True)),
-//('delete_notification', Field(is_optional=True)),
-//('presence_notification', Field(is_optional=True)),
-//('block_notification', Field(is_optional=True)),
-//('invitation_watermark_notification', Field(is_optional=True)),
-//)
-//
-//CLIENT_EVENT_CONTINUATION_TOKEN = Message(
-//('event_id', Field(is_optional=True)),
-//('storage_continuation_token', Field()),
-//('event_timestamp', Field()),
-//is_optional=True,
-//)
-//
-//CLIENT_CONVERSATION_STATE = Message(
-//('conversation_id', CONVERSATION_ID),
-//('conversation', CLIENT_CONVERSATION),
-//('event', RepeatedField(CLIENT_EVENT)),
-//(None, Field(is_optional=True)),
-//('event_continuation_token', CLIENT_EVENT_CONTINUATION_TOKEN),
-//(None, Field(is_optional=True)),
-//(None, RepeatedField(Field())),
-//)
-//
-//CLIENT_CONVERSATION_STATE_LIST = RepeatedField(CLIENT_CONVERSATION_STATE)
+class CLIENT_CHAT_MESSAGE : Message {
+    var field1: OptionalField = nil
+    var annotation: NSArray?
+
+    class CONTENT : Message {
+        var segment: [MESSAGE_SEGMENT]?
+        var attachment: [MESSAGE_ATTACHMENT]?
+    }
+
+    var message_content = CONTENT()
+}
+
+class CLIENT_CONVERSATION_RENAME : Message {
+    var new_name: NSString = ""
+    var old_name: NSString = ""
+}
+
+class CLIENT_HANGOUT_EVENT : Message {
+    var event_type: ClientHangoutEventType = 0
+    var participant_id = [USER_ID]()
+    var hangout_duration_secs: NSNumber?
+    var transferred_conversation_id: NSString?
+    var refresh_timeout_secs: NSNumber?
+    var is_periodic_refresh: NSNumber?
+    var field1: OptionalField = nil
+}
+
+class CLIENT_OTR_MODIFICATION : Message {
+    var old_otr_status :OffTheRecordStatus = 0
+    var new_otr_status :OffTheRecordStatus = 0
+    var old_otr_toggle :ClientOffTheRecordToggle = 0
+    var new_otr_toggle :ClientOffTheRecordToggle = 0
+}
+
+class CLIENT_MEMBERSHIP_CHANGE : Message {
+    var type_: MembershipChangeType = 0
+    var field1 = NSArray()
+    var participant_ids = [USER_ID]()
+    var field2: OptionalField = nil
+}
+
+class CLIENT_EVENT : Message {
+    var conversation_id = CONVERSATION_ID()
+    var sender_id: USER_ID?
+    var timestamp: NSString = ""
+
+    class EVENT_STATE : Message {
+        var user_id = USER_ID()
+        var client_generated_id: OptionalField = nil
+        var notification_level: ClientNotificationLevel = 0
+    }
+    var self_event_state : EVENT_STATE?
+    var field1: OptionalField = nil
+    var field2: OptionalField = nil
+    var chat_message: CLIENT_CHAT_MESSAGE?
+    var field3: OptionalField = nil
+    var membership_change: CLIENT_MEMBERSHIP_CHANGE?
+    var conversation_rename: CLIENT_CONVERSATION_RENAME?
+    var hangout_event: CLIENT_HANGOUT_EVENT?
+    var event_id: NSString?
+    var advances_sort_timestamp: NSNumber?
+    var otr_modification: CLIENT_OTR_MODIFICATION?
+    var field4: OptionalField = nil
+    var event_otr: OffTheRecordStatus = 0
+    var field5: OptionalField = nil
+}
+
+class CLIENT_EVENT_NOTIFICATION : Message {
+    var event = CLIENT_EVENT()
+}
+
+class CLIENT_WATERMARK_NOTIFICATION : Message {
+    var participant_id = USER_ID()
+    var conversation_id = CONVERSATION_ID()
+    var latest_read_timestamp: NSString = ""
+}
+
+class CLIENT_STATE_UPDATE_HEADER : Message {
+    var active_client_state: ActiveClientState = 0
+    var field1: OptionalField = nil
+    var request_trace_id: NSString = ""
+    var field2: OptionalField = nil
+    var current_server_time: NSString = ""
+    var field3: OptionalField = nil
+    var field4: OptionalField = nil
+    var updating_client_id: OptionalField = nil
+}
+
+class CLIENT_STATE_UPDATE : Message {
+    var state_update_header = CLIENT_STATE_UPDATE_HEADER()
+    var conversation_notification: OptionalField = nil
+    var event_notification: CLIENT_EVENT_NOTIFICATION?
+    var focus_notification = CLIENT_SET_FOCUS_NOTIFICATION()
+    var typing_notification = CLIENT_SET_TYPING_NOTIFICATION()
+    var notification_level_notification: OptionalField = nil
+    var reply_to_invite_notification: OptionalField = nil
+    var watermark_notification: CLIENT_WATERMARK_NOTIFICATION?
+    var field1: OptionalField = nil
+    var settings_notification: OptionalField = nil
+    var view_modification: OptionalField = nil
+    var easter_egg_notification: OptionalField = nil
+    var client_conversation = CLIENT_CONVERSATION()
+    var self_presence_notification: OptionalField = nil
+    var delete_notification: OptionalField = nil
+    var presence_notification: OptionalField = nil
+    var block_notification: OptionalField = nil
+    var invitation_watermark_notification: OptionalField = nil
+}
+
+class CLIENT_EVENT_CONTINUATION_TOKEN : Message {
+    var event_id: NSString?
+    var storage_continuation_token: NSString = ""
+    var event_timestamp: NSString = ""
+}
+
+
+class CLIENT_CONVERSATION_STATE : Message {
+    var conversation_id = CONVERSATION_ID()
+    var conversation = CLIENT_CONVERSATION()
+    var event = [CLIENT_EVENT]()
+    var field1: OptionalField = nil
+    var event_continuation_token: CLIENT_EVENT_CONTINUATION_TOKEN?
+    var field2: OptionalField = nil
+    var field3: OptionalField = nil
+}
 
 class CLIENT_ENTITY : Message {
     var field1: OptionalField = nil
@@ -381,27 +375,29 @@ class CLIENT_ENTITY : Message {
     var properties = PROPERTIES()
 }
 
-//ENTITY_GROUP = Message(
-//    (None, Field()),  # always 0?
-//    (None, Field()),  # some sort of ID
-//    ('entity', RepeatedField(Message(
-//        ('entity', CLIENT_ENTITY),
-//        (None, Field()),  # always 0?
-//    ))),
-//)
+class ENTITY_GROUP : Message {
+    var field1: OptionalField = nil
+    var some_sort_of_id: OptionalField = nil
 
-//INITIAL_CLIENT_ENTITIES = Message(
-//    (None, Field()),  # 'cgserp'
-//    (None, Field()),  # a header
-//    ('entities', RepeatedField(CLIENT_ENTITY)),
-//(None, Field(is_optional=True)),  # always None?
-//('group1', ENTITY_GROUP),
-//('group2', ENTITY_GROUP),
-//('group3', ENTITY_GROUP),
-//('group4', ENTITY_GROUP),
-//('group5', ENTITY_GROUP),
-//
-//)
+    class ENTITY : Message {
+        var entity = CLIENT_ENTITY()
+        var field1: OptionalField = nil
+    }
+
+    var entity = [ENTITY]()
+}
+
+class INITIAL_CLIENT_ENTITIES : Message {
+    var cgserp: NSString = ""
+    var header: OptionalField = nil
+    var entities = [CLIENT_ENTITY]()
+    var field1: OptionalField = nil
+    var group1 = ENTITY_GROUP()
+    var group2 = ENTITY_GROUP()
+    var group3 = ENTITY_GROUP()
+    var group4 = ENTITY_GROUP()
+    var group5 = ENTITY_GROUP()
+}
 
 class CLIENT_GET_SELF_INFO_RESPONSE : Message {
     var cgsirp: NSString = ""
@@ -409,29 +405,29 @@ class CLIENT_GET_SELF_INFO_RESPONSE : Message {
     var self_entity = CLIENT_ENTITY()
 }
 
-//CLIENT_RESPONSE_HEADER = Message(
-//    ('status', Field()),  # 1 => success
-//    (None, Field(is_optional=True)),
-//    (None, Field(is_optional=True)),
-//    ('request_trace_id', Field()),
-//    ('current_server_time', Field()),
-//)
-//
-//CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE = Message(
-//    (None, Field()),  # 'csanerp'
-//    ('response_header', CLIENT_RESPONSE_HEADER),
-//('sync_timestamp', Field()),
-//('conversation_state', RepeatedField(CLIENT_CONVERSATION_STATE)),
-//)
-//
-//CLIENT_GET_CONVERSATION_RESPONSE = Message(
-//(None, Field()),  # 'cgcrp'
-//('response_header', CLIENT_RESPONSE_HEADER),
-//('conversation_state', CLIENT_CONVERSATION_STATE),
-//)
-//
-//CLIENT_GET_ENTITY_BY_ID_RESPONSE = Message(
-//(None, Field()),  # 'cgebirp'
-//('response_header', CLIENT_RESPONSE_HEADER),
-//('entities', RepeatedField(CLIENT_ENTITY)),
-//)
+class CLIENT_RESPONSE_HEADER : Message {
+    var status: NSNumber = 0
+    var field1: OptionalField = nil
+    var field2: OptionalField = nil
+    var request_trace_id: NSString = ""
+    var current_server_time: NSString = ""
+}
+
+class CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE : Message {
+    var csanerp: NSString = ""
+    var response_header = CLIENT_RESPONSE_HEADER()
+    var sync_timestamp: NSString = ""
+    var conversation_state = [CLIENT_CONVERSATION_STATE]()
+}
+
+class CLIENT_GET_CONVERSATION_RESPONSE : Message {
+    var cgcrp: NSString = ""
+    var response_header = CLIENT_RESPONSE_HEADER()
+    var conversation_state = CLIENT_CONVERSATION_STATE()
+}
+
+class CLIENT_GET_ENTITY_BY_ID_RESPONSE : Message {
+    var cgebirp: NSString = ""
+    var response_header = CLIENT_RESPONSE_HEADER()
+    var entities = [CLIENT_ENTITY]()
+}

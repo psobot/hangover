@@ -25,9 +25,16 @@ let ACTIVE_TIMEOUT_SECS = 120
 // Minimum timeout between subsequent setactiveclient requests:
 let SETACTIVECLIENT_LIMIT_SECS = 60
 
-class Client {
+protocol ClientDelegate {
+    func clientDidConnect(client: Client, initialData: InitialData)
+    func clientDidDisconnect(client: Client)
+    func clientDidReconnect(client: Client)
+}
 
+class Client : ChannelDelegate {
     let manager: Alamofire.Manager
+    var delegate: ClientDelegate?
+
     var CHAT_INIT_PARAMS: Dictionary<String, AnyObject?> = [
         "prop": "aChromeExtension",
         "fid": "gtn-roster-iframe-id",
@@ -39,26 +46,21 @@ class Client {
         self.manager = manager
     }
 
-    func connect() {
-        let initial_data = self.initialize_chat()
-//        let channel = Channel(cookies)
+    var initial_data: InitialData?
+    var channel: Channel?
 
-//        def _on_connect():
-//            """Wrapper to fire on_connect with initial_data."""
-//            yield from self.on_connect.fire(initial_data)
-//        self._channel.on_connect.add_observer(_on_connect)
-//        self._channel.on_reconnect.add_observer(self.on_reconnect.fire)
-//        self._channel.on_disconnect.add_observer(self.on_disconnect.fire)
-//        self._channel.on_message.add_observer(self._on_push_data)
-//
-//        self._listen_future = asyncio.async(self._channel.listen())
-//        try:
-//            yield from self._listen_future
-//        except asyncio.CancelledError:
-//            pass
+    func connect() {
+        self.initialize_chat { (id: InitialData?) in
+            self.initial_data = id
+            println("Chat initialized. Opening channel...")
+
+            self.channel = Channel(manager: self.manager)
+            self.channel?.delegate = self
+            self.channel?.listen()
+        }
     }
 
-    func initialize_chat() -> (Int) {
+    func initialize_chat(cb: (data: InitialData?) -> Void) {
         //Request push channel creation and initial chat data.
         //
         //Returns instance of InitialData.
@@ -144,69 +146,59 @@ class Client {
                 let sync_timestamp = (((data_dict["ds:21"] as! NSArray)[0] as! NSArray)[1] as! NSArray)[4] as! NSNumber
                 //  parse timestamp call needed here
 
-                let self_entity = CLIENT_GET_SELF_INFO_RESPONSE.parse((data_dict["ds:20"] as! NSArray)[0] as? NSArray)
-                println("Self entity: \(self_entity)")
+                let self_entity = CLIENT_GET_SELF_INFO_RESPONSE.parse((data_dict["ds:20"] as! NSArray)[0] as? NSArray)!.self_entity
 
+                let initial_conv_states_raw = ((data_dict["ds:19"] as! NSArray)[0] as! NSArray)[3] as! NSArray
+                let initial_conv_states = map(initial_conv_states_raw as! [NSArray]) {
+                    CLIENT_CONVERSATION_STATE.parse($0)!
+                }
+                let initial_conv_parts = initial_conv_states.flatMap { $0.conversation.participant_data }
+
+                let entities = INITIAL_CLIENT_ENTITIES.parse((data_dict["ds:21"] as! NSArray)[0] as? NSArray)!
+                let initial_entities = (entities.entities) + [
+                    entities.group1.entity,
+                    entities.group2.entity,
+                    entities.group3.entity,
+                    entities.group4.entity,
+                    entities.group5.entity,
+                ].flatMap { $0 }.map { $0.entity }
+
+                cb(data: InitialData(
+                    initial_conv_states,
+                    self_entity,
+                    initial_entities,
+                    initial_conv_parts,
+                    sync_timestamp
+                ))
             }
         }
+    }
 
-//        # Parse the entity representing the current user.
-//        self_entity = schemas.CLIENT_GET_SELF_INFO_RESPONSE.parse(
-//            # cgsirp?
-//            # data_dict['ds:20'][0]
-//            # data_dict['ds:35'][0]
-//            data_dict['ds:20'][0]
-//        ).self_entity
-//
-//        # Parse every existing conversation's state, including participants.
-//        initial_conv_states = schemas.CLIENT_CONVERSATION_STATE_LIST.parse(
-//            # csrcrp?
-//            # data_dict['ds:19'][0][3]
-//            # data_dict['ds:36'][0][3]
-//            data_dict['ds:19'][0][3]
-//        )
-//        initial_conv_parts = []
-//        for conv_state in initial_conv_states:
-//            initial_conv_parts.extend(conv_state.conversation.participant_data)
-//
-//        # Parse the entities for the user's contacts (doesn't include users not
-//        # in contacts). If this fails, continue without the rest of the
-//        # entities.
-//        initial_entities = []
-//        try:
-//            entities = schemas.INITIAL_CLIENT_ENTITIES.parse(
-//                # cgserp?
-//                # data_dict['ds:21'][0]
-//                # data_dict['ds:37'][0]
-//                data_dict['ds:21'][0]
-//            )
-//        except ValueError as e:
-//            logger.warning('Failed to parse initial client entities: {}'
-//                           .format(e))
-//        else:
-//            initial_entities.extend(entities.entities)
-//            initial_entities.extend(e.entity for e in itertools.chain(
-//                entities.group1.entity, entities.group2.entity,
-//                entities.group3.entity, entities.group4.entity,
-//                entities.group5.entity
-//            ))
-//
-//        return InitialData(initial_conv_states, self_entity, initial_entities,
-//                           initial_conv_parts, _sync_timestamp)
-        return 1
+    func channelDidConnect(channel: Channel) {
+        delegate?.clientDidConnect(self, initialData: initial_data!)
+    }
+
+    func channelDidDisconnect(channel: Channel) {
+        delegate?.clientDidDisconnect(self)
+    }
+
+    func channelDidReconnect(channel: Channel) {
+        delegate?.clientDidReconnect(self)
+    }
+
+    func channel(channel: Channel, didReceiveMessage message: NSString) {
+        println("\n\nA MESSAGE FROM ELGOOG:\n\t\(message)\n\n")
     }
 }
 
-//# Initial account data received after the client is first connected:
-//InitialData = collections.namedtuple('InitialData', [
-//    'conversation_states',  # [ClientConversationState]
-//    'self_entity',  # ClientEntity
-//    'entities',  # [ClientEntity]
-//    'conversation_participants',  # [ClientConversationParticipantData]
-//    'sync_timestamp'  # datetime
-//])
-//
-//
+typealias InitialData = (
+    conversation_states: [CLIENT_CONVERSATION_STATE],
+    self_entity: CLIENT_ENTITY,
+    entities: [CLIENT_ENTITY],
+    conversation_participants: [CLIENT_CONVERSATION.PARTICIPANT_DATA],
+    sync_timestamp: NSNumber
+)
+
 //class Client(object):
 //    """Instant messaging client for Hangouts.
 //
@@ -326,124 +318,6 @@ class Client {
 //    ##########################################################################
 //    # Private methods
 //    ##########################################################################
-//
-//    @asyncio.coroutine
-//    def _initialize_chat(self):
-//        """Request push channel creation and initial chat data.
-//
-//        Returns instance of InitialData.
-//
-//        The response body is a HTML document containing a series of script tags
-//        containing JavaScript objects. We need to parse the objects to get at
-//        the data.
-//        """
-//        # We first need to fetch the 'pvt' token, which is required for the
-//        # initialization request (otherwise it will return 400).
-//        try:
-//            res = yield from http_utils.fetch(
-//                'get', PVT_TOKEN_URL, cookies=self._cookies,
-//                connector=self._connector
-//            )
-//            CHAT_INIT_PARAMS['pvt'] = javascript.loads(res.body.decode())[1]
-//            logger.info('Found PVT token: {}'.format(CHAT_INIT_PARAMS['pvt']))
-//        except (exceptions.NetworkError, ValueError) as e:
-//            raise exceptions.HangupsError('Failed to fetch PVT token: {}'
-//                                          .format(e))
-//        # Now make the actual initialization request:
-//        try:
-//            res = yield from http_utils.fetch(
-//                'get', CHAT_INIT_URL, cookies=self._cookies,
-//                params=CHAT_INIT_PARAMS, connector=self._connector
-//            )
-//        except exceptions.NetworkError as e:
-//            raise exceptions.HangupsError('Initialize chat request failed: {}'
-//                                          .format(e))
-//
-//        # Parse the response by using a regex to find all the JS objects, and
-//        # parsing them. Not everything will be parsable, but we don't care if
-//        # an object we don't need can't be parsed.
-//
-//        data_dict = {}
-//        for data in CHAT_INIT_REGEX.findall(res.body.decode()):
-//            try:
-//                logger.debug("Attempting to load javascript: {}..."
-//                             .format(repr(data[:100])))
-//                data = javascript.loads(data)
-//                # pylint: disable=invalid-sequence-index
-//                data_dict[data['key']] = data['data']
-//            except ValueError as e:
-//                try:
-//                    data = data.replace("data:function(){return", "data:")
-//                    data = data.replace("}}", "}")
-//                    data = javascript.loads(data)
-//                    data_dict[data['key']] = data['data']
-//
-//                except ValueError as e:
-//                    raise
-//
-//                # logger.debug('Failed to parse initialize chat object: {}\n{}'
-//                #              .format(e, data))
-//
-//        # Extract various values that we will need.
-//        try:
-//            self._api_key = data_dict['ds:7'][0][2]
-//            self._email = data_dict['ds:34'][0][2]
-//            self._header_date = data_dict['ds:2'][0][4]
-//            self._header_version = data_dict['ds:2'][0][6]
-//            self._header_id = data_dict['ds:4'][0][7]
-//            _sync_timestamp = parsers.from_timestamp(
-//                # cgserp?
-//                # data_dict['ds:21'][0][1][4]
-//                # data_dict['ds:35'][0][1][4]
-//                data_dict['ds:21'][0][1][4]
-//            )
-//        except KeyError as e:
-//            raise exceptions.HangupsError('Failed to get initialize chat '
-//                                          'value: {}'.format(e))
-//
-//        # Parse the entity representing the current user.
-//        self_entity = schemas.CLIENT_GET_SELF_INFO_RESPONSE.parse(
-//            # cgsirp?
-//            # data_dict['ds:20'][0]
-//            # data_dict['ds:35'][0]
-//            data_dict['ds:20'][0]
-//        ).self_entity
-//
-//        # Parse every existing conversation's state, including participants.
-//        initial_conv_states = schemas.CLIENT_CONVERSATION_STATE_LIST.parse(
-//            # csrcrp?
-//            # data_dict['ds:19'][0][3]
-//            # data_dict['ds:36'][0][3]
-//            data_dict['ds:19'][0][3]
-//        )
-//        initial_conv_parts = []
-//        for conv_state in initial_conv_states:
-//            initial_conv_parts.extend(conv_state.conversation.participant_data)
-//
-//        # Parse the entities for the user's contacts (doesn't include users not
-//        # in contacts). If this fails, continue without the rest of the
-//        # entities.
-//        initial_entities = []
-//        try:
-//            entities = schemas.INITIAL_CLIENT_ENTITIES.parse(
-//                # cgserp?
-//                # data_dict['ds:21'][0]
-//                # data_dict['ds:37'][0]
-//                data_dict['ds:21'][0]
-//            )
-//        except ValueError as e:
-//            logger.warning('Failed to parse initial client entities: {}'
-//                           .format(e))
-//        else:
-//            initial_entities.extend(entities.entities)
-//            initial_entities.extend(e.entity for e in itertools.chain(
-//                entities.group1.entity, entities.group2.entity,
-//                entities.group3.entity, entities.group4.entity,
-//                entities.group5.entity
-//            ))
-//
-//        return InitialData(initial_conv_states, self_entity, initial_entities,
-//                           initial_conv_parts, _sync_timestamp)
 //
 //    def _get_cookie(self, name):
 //        """Return a cookie for raise error if that cookie was not provided."""

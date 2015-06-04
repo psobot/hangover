@@ -29,6 +29,10 @@ class EnumTestMessage : Message {
     var enumValue = ConversationType()
 }
 
+class ArrayTestMessage : Message {
+    var array = [CONVERSATION_ID]()
+}
+
 class PBLiteTests: XCTestCase {
     override func setUp() {
         super.setUp()
@@ -56,7 +60,7 @@ class PBLiteTests: XCTestCase {
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.link_data)
 
-        let formatting = segment.formatting!    
+        let formatting = segment.formatting!
         XCTAssertEqual("true", formatting.bold!)
     }
 
@@ -71,5 +75,13 @@ class PBLiteTests: XCTestCase {
     func testEnum() {
         let enumTestMessage = EnumTestMessage.parse([2])!
         XCTAssertEqual(enumTestMessage.enumValue, ConversationType.GROUP)
+    }
+
+    func testArray() {
+        let arrayTestMessage = ArrayTestMessage.parse([[["12"], ["23"], ["34"]]])!
+        XCTAssertEqual(count(arrayTestMessage.array), 3)
+        XCTAssertEqual("12", arrayTestMessage.array[0].id_)
+        XCTAssertEqual("23", arrayTestMessage.array[1].id_)
+        XCTAssertEqual("34", arrayTestMessage.array[2].id_)
     }
 }

@@ -10,11 +10,14 @@ import Foundation
 import Alamofire
 import JavaScriptCore
 
-@objc protocol ChannelDelegate {
-    optional func onMessage(message: NSString)
+protocol ChannelDelegate {
+    func channelDidConnect(channel: Channel)
+    func channelDidDisconnect(channel: Channel)
+    func channelDidReconnect(channel: Channel)
+    func channel(channel: Channel, didReceiveMessage: NSString)
 }
 
-class Channel {
+class Channel : NSObject, NSURLSessionDataDelegate {
     static let ORIGIN_URL = "https://talkgadget.google.com"
     let CHANNEL_URL_PREFIX = "https://0.client-channel.google.com/client-channel"
 
@@ -40,6 +43,7 @@ class Channel {
     var need_new_sid = true   // whether a new SID is needed
 
     let manager: Alamofire.Manager
+    var delegate: ChannelDelegate?
 
     init(manager: Alamofire.Manager) {
         self.manager = manager
@@ -80,50 +84,28 @@ class Channel {
             // Clear any previous push data, since if there was an error it
             // could contain garbage.
             self.pushParser = PushDataParser()
-            self.startRequest()
-
-//            if let error = () {
-//                NSLog("Long-polling request failed: \(error)")
-//                retries -= 1
-//                if isConnected {
-//                    isConnected = false
-//                }
-
-                //self.on_disconnect.fire()
-
-//                if isinstance(e, UnknownSIDError) {
-//                    need_new_sid = true
-//                }
-//            } else {
-                // The connection closed successfully, so reset the number of
-                // retries.
-//                retries = Channel.MAX_RETRIES
-//            }
-
-            // If the request ended with an error, the client must account for
-            // messages being dropped during this time.
+            self.makeLongPollingRequest()
         } else {
             NSLog("Listen failed due to no retries left.");
         }
         // logger.error('Ran out of retries for long-polling request')
     }
 
-    func startRequest() {
+    func makeLongPollingRequest() {
         //  Open a long-polling request and receive push data.
         //
         //  This method uses keep-alive to make re-opening the request faster, but
         //  the remote server will set the "Connection: close" header once an hour.
-        //
-        //  Raises hangups.NetworkError or UnknownSIDError.
-        NSLog("Opening new long-polling request")
-        //  Make the request!
 
+        println("Opening long polling request.")
+        //  Make the request!
         let queryString = "VER=8&RID=rpc&t=1&CI=0&ctype=hangouts&TYPE=xmlhttp&gsessionid=\(gSessionIDParam!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!)&SID=\(sidParam!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!)"
         let url = "\(CHANNEL_URL_PREFIX)/channel/bind?\(queryString)"
 
         //  TODO: Include timeout
 
         var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+
         let sapisid = getCookieValue("SAPISID")!
         println("SAPISID param: \(sapisid)")
         for (k, v) in getAuthorizationHeaders(sapisid) {
@@ -131,49 +113,82 @@ class Channel {
             request.setValue(v, forHTTPHeaderField: k)
         }
         println("Making request to URL: \(url)")
-        manager.request(request).response(onResponse)
-      
 
-//        except asyncio.TimeoutError:
-//            raise exceptions.NetworkError('Request timed out')
-//        except aiohttp.ClientError as e:
-//            raise exceptions.NetworkError('Request connection error: {}'
-//                                          .format(e))
-//        except aiohttp.ServerDisconnectedError as e:
-//            raise exceptions.NetworkError('Server disconnected error: {}'
-//                                          .format(e))
-//        if res.status == 400 and res.reason == 'Unknown SID':
-//            raise UnknownSIDError('SID became invalid')
-//        elif res.status != 200:
-//            raise exceptions.NetworkError(
-//                'Request return unexpected status: {}: {}'
-//                .format(res.status, res.reason)
-//            )
-//        while True:
-//            try:
-//                chunk = yield from asyncio.wait_for(
-//                    res.content.read(MAX_READ_BYTES), PUSH_TIMEOUT
-//                )
-//            except asyncio.TimeoutError:
-//                raise exceptions.NetworkError('Request timed out')
-//            except aiohttp.ClientError as e:
-//                raise exceptions.NetworkError('Request connection error: {}'
-//                                              .format(e))
-//            except aiohttp.ServerDisconnectedError as e:
-//                raise exceptions.NetworkError('Server disconnected error: {}'
-//                                              .format(e))
-//            except asyncio.CancelledError:
-//                # Prevent ResourceWarning when channel is disconnected.
-//                res.close()
-//                raise
-//            if chunk:
-//                yield from self._on_push_data(chunk)
-//            else:
-//                # Close the response to allow the connection to be reused for
-//                # the next request.
-//                res.close()
-//                break
+//        let cfg = NSURLSessionConfiguration.defaultSessionConfiguration()
+//        cfg.HTTPCookieStorage = NSHTTPCookieStorage.sharedHTTPCookieStorage()
+//        let sessionCopy = NSURLSession(configuration: cfg, delegate: self, delegateQueue: nil)
+//        sessionCopy.dataTaskWithRequest(request).resume()
+
+        request.timeoutInterval = 1
+        //  TODO: Consume this data as a stream, rather than waiting for the request to timeout.
+        manager.request(request).response { (
+            request: NSURLRequest,
+            response: NSHTTPURLResponse?,
+            responseObject: AnyObject?,
+            error: NSError?) in
+
+            println("long poll completed with status code: \(response?.statusCode)")
+            if response?.statusCode >= 400 {
+                NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
+                self.need_new_sid = true
+                self.listen()
+            } else if response?.statusCode == 200 {
+                self.onPushData(responseObject as! NSData)
+                self.makeLongPollingRequest()
+            } else {
+                NSLog("Received unknown response code \(response?.statusCode)")
+                NSLog(NSString(data: responseObject as! NSData, encoding: 4)! as String)
+            }
+
+        }
     }
+
+
+    func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
+        println("GOT DATA \(NSString(data: data, encoding: NSUTF8StringEncoding))")
+    }
+
+    func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
+        NSLog("Request failed: \(error)")
+        //            if let error = () {
+        //                NSLog("Long-polling request failed: \(error)")
+        //                retries -= 1
+        //                if isConnected {
+        //                    isConnected = false
+        //                }
+
+        //self.on_disconnect.fire()
+
+        //                if isinstance(e, UnknownSIDError) {
+        //                    need_new_sid = true
+        //                }
+        //            } else {
+        // The connection closed successfully, so reset the number of
+        // retries.
+        //                retries = Channel.MAX_RETRIES
+        //            }
+
+        // If the request ended with an error, the client must account for
+        // messages being dropped during this time.
+    }
+
+    func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveResponse response: NSURLResponse, completionHandler: (NSURLSessionResponseDisposition) -> Void) {
+        if let response = response as? NSHTTPURLResponse {
+            println("long poll completed with status code: \(response.statusCode)")
+            if response.statusCode >= 400 {
+                //NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
+                self.need_new_sid = true
+                self.listen()
+            } else if response.statusCode == 200 {
+                //self.onPushData(responseObject as! NSData)
+                self.makeLongPollingRequest()
+            } else {
+                NSLog("Received unknown response code \(response.statusCode)")
+                //NSLog(NSString(data: responseObject as! NSData, encoding: 4)! as String)
+            }
+        }
+    }
+
 
     func fetchChannelSID() {
         //  Creates a new channel for receiving push data.
@@ -183,50 +198,37 @@ class Channel {
         // Chrome uses, but if we don't send a gsessionid with this request, it
         // will return a gsessionid as well as the SID.
 
-//      res = yield from http_utils.fetch(
-//          'post', CHANNEL_URL_PREFIX.format('channel/bind'),
-//          cookies=self._cookies, data='count=0', connector=self._connector,
-//          params={
-//              'VER': 8,
-//              'RID': 81187,
-//              'ctype': 'hangouts',  # client type
-//          }
-//      )
         var params = ["VER": 8, "RID": 81187, "ctype": "hangouts"]
         let headers = getAuthorizationHeaders(getCookieValue("SAPISID")!)
         let url = "\(CHANNEL_URL_PREFIX)/channel/bind?VER=8&RID=81187&ctype=hangouts"
-        //  TODO: Include cookies
-        //  TODO: Include timeout
 
         var URLRequest = NSMutableURLRequest(URL: NSURL(string: url)!)
         URLRequest.HTTPMethod = "POST"
         for (k, v) in headers {
             URLRequest.addValue(v, forHTTPHeaderField: k)
         }
+
         let data = "count=0".dataUsingEncoding(NSUTF8StringEncoding)!
         isSubscribed = false
-        manager.upload(URLRequest, data: data).response(onChannelSIDResponse)
-    }
-
-    private func onResponse(
-      request: NSURLRequest,
-      response: NSHTTPURLResponse?,
-      responseObject: AnyObject?,
-      error: NSError?) -> Void {
-        if let error = error {
-            NSLog("Request failed: \(error)")
-        } else {
-            if response?.statusCode >= 400 {
-                NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
-                self.need_new_sid = true
-                listen()
-            } else if response?.statusCode == 200 {
-                onPushData(responseObject as! NSData)
+        manager.upload(URLRequest, data: data).response { (
+            request: NSURLRequest,
+            response: NSHTTPURLResponse?,
+            responseObject: AnyObject?,
+            error: NSError?) in
+            if let error = error {
+                NSLog("Request failed: \(error)")
             } else {
-                NSLog("Received unknown response code \(response?.statusCode)")
-                NSLog(NSString(data: responseObject as! NSData, encoding: 4)! as String)
+                let responseValues = parseSIDResponse(responseObject as! NSData)
+                println("Got SID response back: \(NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding))")
+                self.sidParam = responseValues.sid
+                self.gSessionIDParam = responseValues.gSessionID
+                NSLog("New SID: \(self.sidParam)")
+                NSLog("New gsessionid: \(self.gSessionIDParam)")
+                self.need_new_sid = false
+                self.listen()
             }
         }
+
     }
 
     private func onPushData(data: NSData) {
@@ -234,7 +236,7 @@ class Channel {
         // ready" errors that appear to be caused by a race condition on the
         // server.
         if !isSubscribed {
-            // subscribe()
+            subscribe()
             return
         }
 
@@ -243,38 +245,59 @@ class Channel {
         if isConnected {
             if onConnectCalled {
                 isConnected = true
-                // yield from self.on_reconnect.fire()
+                delegate?.channelDidReconnect(self)
             } else {
                 onConnectCalled = true
                 isConnected = true
-                //yield from self.on_connect.fire()
+                delegate?.channelDidConnect(self)
             }
         }
 
         for submission in pushParser.getSubmissions(data) {
-            // yield from self.on_message.fire(submission)
+            delegate?.channel(self, didReceiveMessage: submission)
         }
     }
 
-    private func onChannelSIDResponse(
-        request: NSURLRequest,
-        response: NSHTTPURLResponse?,
-        responseObject: AnyObject?,
-        error: NSError?) -> Void {
-            if let error = error {
-                NSLog("Request failed: \(error)")
-            } else {
-                let responseValues = parseSIDResponse(responseObject as! NSData)
-                println("Got SID response back: \(NSString(data: responseObject as! NSData, encoding: 4))")
-                sidParam = responseValues.sid
-                gSessionIDParam = responseValues.gSessionID
-                NSLog("New SID: \(sidParam)")
-                NSLog("New gsessionid: \(gSessionIDParam)")
-                need_new_sid = false
-                listen()
-            }
-    }
+    private func subscribe() {
+        // Subscribes the channel to receive relevant events.
+        // Only needs to be called when a new channel (SID/gsessionid) is opened.
 
+        // Temporary workaround for #58
+        // yield from asyncio.sleep(1)
+
+        println("Subscribing channel...")
+        let timestamp = Int(NSDate().timeIntervalSince1970 * 1000)
+
+        // Hangouts for Chrome splits this over 2 requests, but it's possible to
+        // do everything in one.
+        let data: Dictionary<String, AnyObject> = [
+            "count": "3",
+            "ofs": "0",
+            "req0_p": "{\"1\":{\"1\":{\"1\":{\"1\":3,\"2\":2}},\"2\":{\"1\":{\"1\":3,\"2\":2},\"2\":\"\",\"3\":\"JS\",\"4\":\"lcsclient\"},\"3\":\(timestamp),\"4\":0,\"5\":\"c1\"},\"2\":{}}",
+            "req1_p": "{\"1\":{\"1\":{\"1\":{\"1\":3,\"2\":2}},\"2\":{\"1\":{\"1\":3,\"2\":2},\"2\":\"\",\"3\":\"JS\",\"4\":\"lcsclient\"},\"3\":\(timestamp),\"4\":\(timestamp),\"5\":\"c3\"},\"3\":{\"1\":{\"1\":\"babel\"}}}",
+            "req2_p": "{\"1\":{\"1\":{\"1\":{\"1\":3,\"2\":2}},\"2\":{\"1\":{\"1\":3,\"2\":2},\"2\":\"\",\"3\":\"JS\",\"4\":\"lcsclient\"},\"3\":\(timestamp),\"4\":\(timestamp),\"5\":\"c4\"},\"3\":{\"1\":{\"1\":\"hangout_invite\"}}}",
+        ]
+        let postBody = data.urlEncodedQueryStringWithEncoding(NSUTF8StringEncoding)
+        let queryString = (["VER": 8, "RID": 81188, "ctype": "hangouts", "gsessionid": self.gSessionIDParam!, "SID": self.sidParam!] as Dictionary<String, AnyObject>).urlEncodedQueryStringWithEncoding(NSUTF8StringEncoding)
+
+        let url = "\(CHANNEL_URL_PREFIX)/channel/bind?\(queryString)"
+        var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+        request.HTTPMethod = "POST"
+        request.HTTPBody = postBody.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
+        for (k, v) in getAuthorizationHeaders(getCookieValue("SAPISID")!) {
+            request.setValue(v, forHTTPHeaderField: k)
+        }
+
+        println("Making request to URL: \(url)")
+        manager.request(request).response { (
+            request: NSURLRequest,
+            response: NSHTTPURLResponse?,
+            responseObject: AnyObject?,
+            error: NSError?) in
+            println("Channel is now subscribed.")
+            self.isSubscribed = true
+        }
+    }
 }
 
 func parseSIDResponse(res: NSData) -> (sid: String, gSessionID: String) {
@@ -299,8 +322,7 @@ func getAuthorizationHeaders(sapisid_cookie: String) -> Dictionary<String, Strin
     // It doesn't seem to matter what the url and time are as long as they are
     // consistent.
 
-    let now = NSDate()
-    let time_msec = Int(now.timeIntervalSince1970 * 1000)
+    let time_msec = Int(NSDate().timeIntervalSince1970 * 1000)
 
     let auth_string = "\(time_msec) \(sapisid_cookie) \(Channel.ORIGIN_URL)"
     let auth_hash = auth_string.SHA1()
@@ -385,163 +407,3 @@ class PushDataParser {
     }
 }
 
-//"""Support for reading messages from the long-polling channel.
-//
-//Hangouts receives events using a system that appears very close to an App
-//Engine Channel.
-//"""
-//
-//import aiohttp
-//import asyncio
-//import hashlib
-//import logging
-//import re
-//import time
-//
-//from hangups import javascript, http_utils, event, exceptions
-//
-//logger = logging.getLogger(__name__)
-//LEN_REGEX = re.compile(r'([0-9]+)\n', re.MULTILINE)
-
-
-//class UnknownSIDError(exceptions.HangupsError):
-//
-//    """hangups channel session expired."""
-//
-//    pass
-//
-//
-//
-//def _parse_sid_response(res):
-//    """Parse response format for request for new channel SID.
-//
-//    Example format (after parsing JS):
-//    [   [0,["c","SID_HERE","",8]],
-//        [1,[{"gsid":"GSESSIONID_HERE"}]]]
-//
-//    Returns (SID, gsessionid) tuple.
-//    """
-//    res = javascript.loads(list(PushDataParser().get_submissions(res))[0])
-//    sid = res[0][1][1]
-//    gsessionid = res[1][1][0]['gsid']
-//    return (sid, gsessionid)
-//
-//
-//class Channel(object):
-//
-//    """A channel connection that can listen for messages."""
-//
-//    ##########################################################################
-//    # Public methods
-//    ##########################################################################
-//
-//    def __init__(self, cookies, connector):
-//        """Create a new channel."""
-//
-//        # Event fired when channel connects with arguments ():
-//        self.on_connect = event.Event('Channel.on_connect')
-//        # Event fired when channel reconnects with arguments ():
-//        self.on_reconnect = event.Event('Channel.on_reconnect')
-//        # Event fired when channel disconnects with arguments ():
-//        self.on_disconnect = event.Event('Channel.on_disconnect')
-//        # Event fired when a channel submission is received with arguments
-//        # (submission):
-//        self.on_message = event.Event('Channel.on_message')
-//
-//
-//    ##########################################################################
-//    # Private methods
-//    ##########################################################################
-//
-//    @asyncio.coroutine
-//    def _fetch_channel_sid(self):
-//        """Creates a new channel for receiving push data.
-//
-//        Raises hangups.NetworkError if the channel can not be created.
-//        """
-//        logger.info('Requesting new gsessionid and SID...')
-//        # There's a separate API to get the gsessionid alone that Hangouts for
-//        # Chrome uses, but if we don't send a gsessionid with this request, it
-//        # will return a gsessionid as well as the SID.
-//        res = yield from http_utils.fetch(
-//            'post', CHANNEL_URL_PREFIX.format('channel/bind'),
-//            cookies=self._cookies, data='count=0', connector=self._connector,
-//            headers=get_authorization_headers(self._cookies['SAPISID']),
-//            params={
-//                'VER': 8,
-//                'RID': 81187,
-//                'ctype': 'hangouts',  # client type
-//            }
-//        )
-//        self._sid_param, self._gsessionid_param = _parse_sid_response(res.body)
-//        self._is_subscribed = False
-//        logger.info('New SID: {}'.format(self._sid_param))
-//        logger.info('New gsessionid: {}'.format(self._gsessionid_param))
-//
-//    @asyncio.coroutine
-//    def _subscribe(self):
-//        """Subscribes the channel to receive relevant events.
-//
-//        Only needs to be called when a new channel (SID/gsessionid) is opened.
-//        """
-//        # XXX: Temporary workaround for #58
-//        yield from asyncio.sleep(1)
-//
-//        logger.info('Subscribing channel...')
-//        timestamp = str(int(time.time() * 1000))
-//        # Hangouts for Chrome splits this over 2 requests, but it's possible to
-//        # do everything in one.
-//        yield from http_utils.fetch(
-//            'post', CHANNEL_URL_PREFIX.format('channel/bind'),
-//            cookies=self._cookies, connector=self._connector,
-//            headers=get_authorization_headers(self._cookies['SAPISID']),
-//            params={
-//                'VER': 8,
-//                'RID': 81188,
-//                'ctype': 'hangouts',  # client type
-//                'gsessionid': self._gsessionid_param,
-//                'SID': self._sid_param,
-//            },
-//            data={
-//                'count': 3,
-//                'ofs': 0,
-//                'req0_p': ('{"1":{"1":{"1":{"1":3,"2":2}},"2":{"1":{"1":3,"2":'
-//                           '2},"2":"","3":"JS","4":"lcsclient"},"3":' +
-//                           timestamp + ',"4":0,"5":"c1"},"2":{}}'),
-//                'req1_p': ('{"1":{"1":{"1":{"1":3,"2":2}},"2":{"1":{"1":3,"2":'
-//                           '2},"2":"","3":"JS","4":"lcsclient"},"3":' +
-//                           timestamp + ',"4":' + timestamp +
-//                           ',"5":"c3"},"3":{"1":{"1":"babel"}}}'),
-//                'req2_p': ('{"1":{"1":{"1":{"1":3,"2":2}},"2":{"1":{"1":3,"2":'
-//                           '2},"2":"","3":"JS","4":"lcsclient"},"3":' +
-//                           timestamp + ',"4":' + timestamp +
-//                           ',"5":"c4"},"3":{"1":{"1":"hangout_invite"}}}'),
-//            },
-//        )
-//        logger.info('Channel is now subscribed')
-//        self._is_subscribed = True
-//
-//    @asyncio.coroutine
-//    def _on_push_data(self, data_bytes):
-//        """Parse push data and trigger event methods."""
-//        logger.debug('Received push data:\n{}'.format(data_bytes))
-//
-//        # Delay subscribing until first byte is received prevent "channel not
-//        # ready" errors that appear to be caused by a race condition on the
-//        # server.
-//        if not self._is_subscribed:
-//            yield from self._subscribe()
-//
-//        # This method is only called when the long-polling request was
-//        # successful, so use it to trigger connection events if necessary.
-//        if not self._is_connected:
-//            if self._on_connect_called:
-//                self._is_connected = True
-//                yield from self.on_reconnect.fire()
-//            else:
-//                self._on_connect_called = True
-//                self._is_connected = True
-//                yield from self.on_connect.fire()
-//
-//        for submission in self._push_parser.get_submissions(data_bytes):
-//            yield from self.on_message.fire(submission)

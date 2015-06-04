@@ -13,12 +13,7 @@ import Alamofire
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-//        auth_with_code { (access_token: String, refresh_token: String) in
-//            println("access: \(access_token), refresh: \(refresh_token)")
-//        }
-
         withAuthenticatedManager { (manager: Alamofire.Manager) in
-            Channel(manager: manager).listen()
             Client(manager: manager).connect()
         }
     }

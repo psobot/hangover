@@ -106,6 +106,40 @@ func unwrap(any:Any) -> Any? {
     return some.valueType
 }
 
+func unwrapArray(any:Any) -> Any? {
+    let mi:MirrorType = reflect(any)
+    if mi.disposition != .IndexContainer {
+        return any
+    }
+    if mi.count == 0 { return nil } // Optional.None
+    let (name,some) = mi[0]
+    return some.valueType
+}
+
+func getArrayMessageType(arr: Any) -> Message.Type? {
+    //  hackety hack, this is extremely brittle but Swift's introspection isn't perfect yet
+    if arr is [CONVERSATION_ID] { return CONVERSATION_ID.self }
+    if arr is [USER_ID] { return USER_ID.self }
+    if arr is [CLIENT_EVENT] { return CLIENT_EVENT.self }
+    if arr is [CLIENT_ENTITY] { return CLIENT_ENTITY.self }
+    if arr is [MESSAGE_SEGMENT] { return MESSAGE_SEGMENT.self }
+    if arr is [MESSAGE_ATTACHMENT] { return MESSAGE_ATTACHMENT.self }
+    if arr is [CLIENT_CONVERSATION.PARTICIPANT_DATA] { return CLIENT_CONVERSATION.PARTICIPANT_DATA.self }
+    if arr is [CLIENT_CONVERSATION.STATE.READ_STATE] { return CLIENT_CONVERSATION.STATE.READ_STATE.self }
+    if arr is [ENTITY_GROUP.ENTITY] { return ENTITY_GROUP.ENTITY.self }
+
+    // ... etc, one for each different kind of array we might have.
+    // This is horrible, but if we can find a function that'll take
+    // an Any (really a [Something]) and return Something,
+    // this function doesn't need to exist anymore.
+    return nil
+}
+
+func getArrayEnumType(arr: Any) -> Enum.Type? {
+    if arr is [ClientConversationView] { return ClientConversationView.self }
+    return nil
+}
+
 class Message : NSObject {
     required override init() { }
     class func isOptional() -> Bool { return false }
@@ -149,7 +183,15 @@ class Message : NSObject {
                     if arr[i] is NSNull {
                         instance.setValue(nil, forKey: propertyName)
                     } else {
-                        instance.setValue(arr[i], forKey: propertyName)
+                        if let elementType = getArrayMessageType(property) {
+                            let val = map(arr[i] as! NSArray) { elementType.parse($0 as? NSArray)! }
+                            instance.setValue(val, forKey:propertyName)
+                        } else if let elementType = getArrayEnumType(property) {
+                            let val = map(arr[i] as! NSArray) { elementType(value: ($0 as! NSNumber)) }
+                            instance.setValue(val, forKey:propertyName)
+                        } else {
+                            instance.setValue(arr[i], forKey: propertyName)
+                        }
                     }
                 }
             }

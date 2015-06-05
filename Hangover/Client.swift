@@ -29,6 +29,7 @@ protocol ClientDelegate {
     func clientDidConnect(client: Client, initialData: InitialData)
     func clientDidDisconnect(client: Client)
     func clientDidReconnect(client: Client)
+    func clientDidUpdateState(client: Client, update: CLIENT_STATE_UPDATE)
 }
 
 class Client : ChannelDelegate {
@@ -48,6 +49,16 @@ class Client : ChannelDelegate {
 
     var initial_data: InitialData?
     var channel: Channel?
+
+    var api_key: String?
+    var email: String?
+    var header_date: String?
+    var header_version: String?
+    var header_id: String?
+    var client_id: String?
+
+    var last_active_secs: NSNumber? = 0
+    var active_client_state: ActiveClientState?
 
     func connect() {
         self.initialize_chat { (id: InitialData?) in
@@ -84,7 +95,6 @@ class Client : ChannelDelegate {
             responseObject: AnyObject?,
             error: NSError?) in
 
-            // CHAT_INIT_PARAMS['pvt'] = javascript.loads(res.body.decode())[1]
             let body = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
 
             let ctx = JSContext()
@@ -137,11 +147,11 @@ class Client : ChannelDelegate {
                         }
                     }
                 }
-                let api_key = ((data_dict["ds:7"] as! NSArray)[0] as! NSArray)[2] as! String
-                let email = ((data_dict["ds:33"] as! NSArray)[0] as! NSArray)[2] as! String
-                let header_date = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[4] as! String
-                let header_version = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[6] as! String
-                let header_id = ((data_dict["ds:4"] as! NSArray)[0] as! NSArray)[7] as! String
+                self.api_key = ((data_dict["ds:7"] as! NSArray)[0] as! NSArray)[2] as? String
+                self.email = ((data_dict["ds:33"] as! NSArray)[0] as! NSArray)[2] as? String
+                self.header_date = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[4] as? String
+                self.header_version = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[6] as? String
+                self.header_id = ((data_dict["ds:4"] as! NSArray)[0] as! NSArray)[7] as? String
 
                 let sync_timestamp = (((data_dict["ds:21"] as! NSArray)[0] as! NSArray)[1] as! NSArray)[4] as! NSNumber
                 //  parse timestamp call needed here
@@ -174,6 +184,15 @@ class Client : ChannelDelegate {
         }
     }
 
+    private func getRequestHeader() -> [AnyObject?] {
+        return [
+            [6, 3, self.header_version!, self.header_date!],
+            [self.client_id!, self.header_id!],
+            nil,
+            "en"
+        ]
+    }
+
     func channelDidConnect(channel: Channel) {
         delegate?.clientDidConnect(self, initialData: initial_data!)
     }
@@ -187,7 +206,19 @@ class Client : ChannelDelegate {
     }
 
     func channel(channel: Channel, didReceiveMessage message: NSString) {
-        println("\n\nA MESSAGE FROM ELGOOG:\n\t\(message)\n\n")
+        let result = parse_submission(message as String)
+
+        if let new_client_id = result.client_id {
+            self.client_id = new_client_id
+        }
+
+        for state_update in result.updates {
+            self.active_client_state = (
+                state_update.state_update_header.active_client_state
+            )
+            println("Updating state: \(state_update)")
+            delegate?.clientDidUpdateState(self, update: state_update)
+        }
     }
 }
 
@@ -205,78 +236,9 @@ typealias InitialData = (
 //    Maintains a connections to the servers, emits events, and accepts commands.
 //    """
 //
-//    def __init__(self, cookies):
-//        """Create new client.
-//
-//        cookies is a dictionary of authentication cookies.
-//        """
-//
-//        # Event fired when the client connects for the first time with
-//        # arguments (initial_data).
-//        self.on_connect = event.Event('Client.on_connect')
-//        # Event fired when the client reconnects after being disconnected with
-//        # arguments ().
-//        self.on_reconnect = event.Event('Client.on_reconnect')
-//        # Event fired when the client is disconnected with arguments ().
-//        self.on_disconnect = event.Event('Client.on_disconnect')
-//        # Event fired when a ClientStateUpdate arrives with arguments
-//        # (state_update).
-//        self.on_state_update = event.Event('Client.on_state_update')
-//
-//        self._cookies = cookies
-//        proxy = os.environ.get('HTTP_PROXY')
-//        if proxy:
-//            self._connector = aiohttp.ProxyConnector(proxy)
-//        else:
-//            self._connector = aiohttp.TCPConnector()
-//
-//        # hangups.channel.Channel instantiated in connect()
-//        self._channel = None
-//        # API key sent with every request:
-//        self._api_key = None
-//        # Parameters sent in request headers:
-//        self._header_date = None
-//        self._header_version = None
-//        self._header_id = None
-//        # String identifying this client:
-//        self._client_id = None
-//        # Account email address:
-//        self._email = None
-//        # Time in seconds that the client as last set as active:
-//        self._last_active_secs = 0.0
-//        # ActiveClientState enum value or None:
-//        self._active_client_state = None
-//        # Future for Channel.listen
-//        self._listen_future = None
-//
 //    ##########################################################################
 //    # Public methods
 //    ##########################################################################
-//
-//    @asyncio.coroutine
-//    def connect(self):
-//        """Establish a connection to the chat server.
-//
-//        Returns when an error has occurred, or Client.disconnect has been
-//        called.
-//        """
-//        initial_data = yield from self._initialize_chat()
-//        self._channel = channel.Channel(self._cookies, self._connector)
-//        @asyncio.coroutine
-//        def _on_connect():
-//            """Wrapper to fire on_connect with initial_data."""
-//            yield from self.on_connect.fire(initial_data)
-//        self._channel.on_connect.add_observer(_on_connect)
-//        self._channel.on_reconnect.add_observer(self.on_reconnect.fire)
-//        self._channel.on_disconnect.add_observer(self.on_disconnect.fire)
-//        self._channel.on_message.add_observer(self._on_push_data)
-//
-//        self._listen_future = asyncio.async(self._channel.listen())
-//        try:
-//            yield from self._listen_future
-//        except asyncio.CancelledError:
-//            pass
-//        logger.info('disconnecting gracefully')
 //
 //    @asyncio.coroutine
 //    def disconnect(self):
@@ -318,37 +280,6 @@ typealias InitialData = (
 //    ##########################################################################
 //    # Private methods
 //    ##########################################################################
-//
-//    def _get_cookie(self, name):
-//        """Return a cookie for raise error if that cookie was not provided."""
-//        try:
-//            return self._cookies[name]
-//        except KeyError:
-//            raise KeyError("Cookie '{}' is required".format(name))
-//
-//    def _get_request_header(self):
-//        """Return request header for chat API request."""
-//        return [
-//            [6, 3, self._header_version, self._header_date],
-//            [self._client_id, self._header_id],
-//            None,
-//            "en"
-//        ]
-//
-//    @asyncio.coroutine
-//    def _on_push_data(self, submission):
-//        """Parse ClientStateUpdate and call the appropriate events."""
-//        for state_update in parsers.parse_submission(submission):
-//            if isinstance(state_update, dict) and 'client_id' in state_update:
-//                # Hack to receive client ID:
-//                self._client_id = state_update['client_id']
-//                logger.info('Received new client_id: {}'
-//                            .format(self._client_id))
-//            else:
-//                self._active_client_state = (
-//                    state_update.state_update_header.active_client_state
-//                )
-//                yield from self.on_state_update.fire(state_update)
 //
 //    @asyncio.coroutine
 //    def _request(self, endpoint, body_json, use_json=True):

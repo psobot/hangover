@@ -2,9 +2,18 @@ PODS:
   - Alamofire (1.2.2)
 
 DEPENDENCIES:
-  - Alamofire (~> 1.2)
+  - Alamofire (from `git@github.com:psobot/Alamofire.git`)
+
+EXTERNAL SOURCES:
+  Alamofire:
+    :git: git@github.com:psobot/Alamofire.git
+
+CHECKOUT OPTIONS:
+  Alamofire:
+    :commit: 31ef165f855faaf63a598fb90100082a84db4cf7
+    :git: git@github.com:psobot/Alamofire.git
 
 SPEC CHECKSUMS:
   Alamofire: 11a6022f5089887d92ffb5a3014c97a0a915ab98
 
-COCOAPODS: 0.37.1
+COCOAPODS: 0.37.2

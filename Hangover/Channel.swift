@@ -119,9 +119,8 @@ class Channel : NSObject, NSURLSessionDataDelegate {
 //        let sessionCopy = NSURLSession(configuration: cfg, delegate: self, delegateQueue: nil)
 //        sessionCopy.dataTaskWithRequest(request).resume()
 
-        request.timeoutInterval = 1
-        //  TODO: Consume this data as a stream, rather than waiting for the request to timeout.
-        manager.request(request).response { (
+        request.timeoutInterval = 30
+        manager.request(request).stream { (data: NSData) in self.onPushData(data) }.response { (
             request: NSURLRequest,
             response: NSHTTPURLResponse?,
             responseObject: AnyObject?,
@@ -133,7 +132,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
                 self.need_new_sid = true
                 self.listen()
             } else if response?.statusCode == 200 {
-                self.onPushData(responseObject as! NSData)
+                //self.onPushData(responseObject as! NSData)
                 self.makeLongPollingRequest()
             } else {
                 NSLog("Received unknown response code \(response?.statusCode)")
@@ -171,24 +170,6 @@ class Channel : NSObject, NSURLSessionDataDelegate {
         // If the request ended with an error, the client must account for
         // messages being dropped during this time.
     }
-
-    func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveResponse response: NSURLResponse, completionHandler: (NSURLSessionResponseDisposition) -> Void) {
-        if let response = response as? NSHTTPURLResponse {
-            println("long poll completed with status code: \(response.statusCode)")
-            if response.statusCode >= 400 {
-                //NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
-                self.need_new_sid = true
-                self.listen()
-            } else if response.statusCode == 200 {
-                //self.onPushData(responseObject as! NSData)
-                self.makeLongPollingRequest()
-            } else {
-                NSLog("Received unknown response code \(response.statusCode)")
-                //NSLog(NSString(data: responseObject as! NSData, encoding: 4)! as String)
-            }
-        }
-    }
-
 
     func fetchChannelSID() {
         //  Creates a new channel for receiving push data.
@@ -258,14 +239,17 @@ class Channel : NSObject, NSURLSessionDataDelegate {
         }
     }
 
+    private var isSubscribing = false
     private func subscribe() {
         // Subscribes the channel to receive relevant events.
         // Only needs to be called when a new channel (SID/gsessionid) is opened.
 
         // Temporary workaround for #58
         // yield from asyncio.sleep(1)
-
+        if isSubscribing { return }
         println("Subscribing channel...")
+        isSubscribing = true
+
         let timestamp = Int(NSDate().timeIntervalSince1970 * 1000)
 
         // Hangouts for Chrome splits this over 2 requests, but it's possible to

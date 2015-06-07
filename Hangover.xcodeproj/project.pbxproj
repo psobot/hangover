@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		08FF5A9CA090D13675B3CCE7 /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71000E92426D15A973A8610C /* Pods.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		3320A6E91B21576800F83B81 /* Parsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3320A6E81B21576800F83B81 /* Parsers.swift */; };
+		3320A6EB1B24E65F00F83B81 /* Delay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3320A6EA1B24E65F00F83B81 /* Delay.swift */; };
+		3320A6EC1B24E6DB00F83B81 /* Delay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3320A6EA1B24E65F00F83B81 /* Delay.swift */; };
 		33368DBC1B12ACD4009B28B2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DBB1B12ACD4009B28B2 /* AppDelegate.swift */; };
 		33368DBE1B12ACD4009B28B2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DBD1B12ACD4009B28B2 /* ViewController.swift */; };
 		33368DC01B12ACD4009B28B2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33368DBF1B12ACD4009B28B2 /* Images.xcassets */; };
@@ -53,6 +55,7 @@
 
 /* Begin PBXFileReference section */
 		3320A6E81B21576800F83B81 /* Parsers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parsers.swift; sourceTree = "<group>"; };
+		3320A6EA1B24E65F00F83B81 /* Delay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Delay.swift; sourceTree = "<group>"; };
 		33368DB61B12ACD4009B28B2 /* Hangover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hangover.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		33368DBA1B12ACD4009B28B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		33368DBB1B12ACD4009B28B2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -154,6 +157,7 @@
 			children = (
 				33368DBA1B12ACD4009B28B2 /* Info.plist */,
 				338983891B201263009BB5BC /* Dictionary+Swifter.swift */,
+				3320A6EA1B24E65F00F83B81 /* Delay.swift */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -412,6 +416,7 @@
 				33E9F5C41B1A2CFE0027F7EC /* Regex.swift in Sources */,
 				33368DDC1B15393D009B28B2 /* Client.swift in Sources */,
 				33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */,
+				3320A6EB1B24E65F00F83B81 /* Delay.swift in Sources */,
 				33368DD91B12B545009B28B2 /* PBLite.swift in Sources */,
 				33405A5E1B1BF89E00C81DC3 /* Auth.swift in Sources */,
 				33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */,
@@ -435,6 +440,7 @@
 				33806E281B1A6875007C6BE4 /* NSString+SHA1.m in Sources */,
 				33405A621B1C0F8800C81DC3 /* Manager.swift in Sources */,
 				33405A671B1D490700C81DC3 /* LoginViewController.swift in Sources */,
+				3320A6EC1B24E6DB00F83B81 /* Delay.swift in Sources */,
 				3389838B1B201467009BB5BC /* Dictionary+Swifter.swift in Sources */,
 				33405A611B1C0F8400C81DC3 /* Auth.swift in Sources */,
 			);

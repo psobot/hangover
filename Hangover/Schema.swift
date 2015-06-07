@@ -406,7 +406,7 @@ class CLIENT_GET_SELF_INFO_RESPONSE : Message {
 }
 
 class CLIENT_RESPONSE_HEADER : Message {
-    var status: NSNumber = 0
+    var status: NSString = ""
     var field1: OptionalField = nil
     var field2: OptionalField = nil
     var request_trace_id: NSString = ""

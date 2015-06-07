@@ -202,6 +202,65 @@ class Message : NSObject {
         }
     }
 
+    func parseRawJSON(input: NSData) -> Self? { return self.dynamicType.parseRawJSON(input) }
+    class func parseRawJSON(input: NSData) -> Self? {
+        var parseError: NSError?
+        if let parsedObject = NSJSONSerialization.JSONObjectWithData(input,
+            options: NSJSONReadingOptions.AllowFragments,
+            error:&parseError) as? NSDictionary {
+                return self.parseJSON(parsedObject)
+        }
+        return nil
+    }
+
+    func parseJSON(input: NSDictionary) -> Self? { return self.dynamicType.parseJSON(input) }
+    class func parseJSON(obj: NSDictionary) -> Self? {
+        var instance = self()
+        let reflection = reflect(instance)
+        for var i = 1; i < reflection.count; i++ {
+            let propertyName = reflection[i].0
+            let property = reflection[i].1.value
+
+            let value: AnyObject? = obj[propertyName]
+
+            //  Unwrapping an optional sub-struct
+            if let type = unwrap(property) as? Message.Type {
+                let val: (AnyObject?) = type.parseJSON(value as! NSDictionary)
+                instance.setValue(val, forKey: propertyName)
+
+                //  Using a non-optional sub-struct
+            } else if let message = property as? Message {
+                let val: (AnyObject?) = message.parseJSON(value as! NSDictionary)
+                instance.setValue(val, forKey: propertyName)
+
+                //  Unwrapping an optional enum
+            } else if let type = unwrap(property) as? Enum.Type {
+                let val: (AnyObject?) = type(value: (value as! NSNumber))
+                instance.setValue(val, forKey: propertyName)
+
+                //  Using a non-optional sub-struct
+            } else if let enumv = property as? Enum {
+                let val: (AnyObject?) = enumv.dynamicType(value: (value as! NSNumber))
+                instance.setValue(val, forKey: propertyName)
+            } else {
+                if value is NSNull || value == nil {
+                    instance.setValue(nil, forKey: propertyName)
+                } else {
+                    if let elementType = getArrayMessageType(property) {
+                        let val = map(value as! NSArray) { elementType.parseJSON($0 as! NSDictionary)! }
+                        instance.setValue(val, forKey:propertyName)
+                    } else if let elementType = getArrayEnumType(property) {
+                        let val = map(value as! NSArray) { elementType(value: ($0 as! NSNumber)) }
+                        instance.setValue(val, forKey:propertyName)
+                    } else {
+                        instance.setValue(value, forKey: propertyName)
+                    }
+                }
+            }
+        }
+        return instance
+    }
+
     func serialize(input: AnyObject?) -> AnyObject? {
         //        # Validate input:
         //        if input_ is None and not self._is_optional:

@@ -75,9 +75,10 @@ func _parse_payload(payload: [AnyObject]) -> [CLIENT_STATE_UPDATE] {
 //    ).replace(microsecond=(microsecond_timestamp % 1000000))
 //
 //
-//def to_timestamp(datetime_timestamp):
-//"""Convert UTC datetime to microsecond timestamp used by Hangouts."""
-//return int(datetime_timestamp.timestamp() * 1000000)
+func to_timestamp(date: NSDate) -> NSNumber {
+    // Convert UTC datetime to microsecond timestamp used by Hangouts.
+    return date.timeIntervalSince1970 * 1000000.0
+}
 //
 //
 //##############################################################################

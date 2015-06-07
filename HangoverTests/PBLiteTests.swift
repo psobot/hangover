@@ -84,4 +84,15 @@ class PBLiteTests: XCTestCase {
         XCTAssertEqual("23", arrayTestMessage.array[1].id_)
         XCTAssertEqual("34", arrayTestMessage.array[2].id_)
     }
+
+    func testJSON() {
+        let json = "{\"response_header\":{\"status\": \"OK\",\"debug_url\": \"\",\"request_trace_id\": \"5919526157227634454\",\"current_server_time\": \"1433707150506000\"},\"sync_timestamp\": \"1433706850507000\"}"
+        let data = json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
+        let resp = CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE.parseRawJSON(data)
+        XCTAssertEqual(resp!.sync_timestamp, "1433706850507000")
+        XCTAssertNotNil(resp!.response_header)
+        XCTAssertEqual(resp!.response_header.status, "OK")
+        XCTAssertEqual(resp!.response_header.request_trace_id, "5919526157227634454")
+        XCTAssertEqual(resp!.response_header.current_server_time, "1433707150506000")
+    }
 }

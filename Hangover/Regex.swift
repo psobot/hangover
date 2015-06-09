@@ -14,26 +14,25 @@ class Regex {
 
     init(_ pattern: String, options: NSRegularExpressionOptions = .CaseInsensitive) {
         self.pattern = pattern
-        var error: NSError?
-        self.internalExpression = NSRegularExpression(pattern: pattern, options: options, error: &error)!
+        self.internalExpression = try! NSRegularExpression(pattern: pattern, options: options)
     }
 
   func test(input: String) -> Bool {
-    let matches = self.internalExpression.matchesInString(input, options:nil, range:NSMakeRange(0, count(input)))
+    let matches = self.internalExpression.matchesInString(input, options:[], range:NSMakeRange(0, input.characters.count))
     return matches.count > 0
   }
 
   func findall(input: String) -> [String] {
     let results: [NSTextCheckingResult] = self.internalExpression.matchesInString(
-      input, options:nil, range:NSMakeRange(0, count(input))
-    ) as! [NSTextCheckingResult]
-    return map(results) { input.substringWithRange(input.convertRangeFromNSRange($0.range)) }
+      input, options:[], range:NSMakeRange(0, input.characters.count)
+    ) as [NSTextCheckingResult]
+    return results.map { input.substringWithRange(input.convertRangeFromNSRange($0.range)) }
   }
 
     func matches(input: String) -> [String] {
         let results: [NSTextCheckingResult] = self.internalExpression.matchesInString(
-            input, options:nil, range:NSMakeRange(0, count(input))
-            ) as! [NSTextCheckingResult]
-        return map(results) { input.substringWithRange(input.convertRangeFromNSRange($0.rangeAtIndex(1))) }
+            input, options:[], range:NSMakeRange(0, input.characters.count)
+            ) as [NSTextCheckingResult]
+        return results.map { input.substringWithRange(input.convertRangeFromNSRange($0.rangeAtIndex(1))) }
     }
 }

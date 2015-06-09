@@ -62,7 +62,7 @@ func auth_with_code(auth_code: String, cb: (access_token: String, refresh_token:
         "grant_type": "authorization_code",
         "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
     ]
-    Alamofire.request(.POST, OAUTH2_TOKEN_REQUEST_URL, parameters: token_request_data).responseJSON {
+    Alamofire.request(.POST, URLString: OAUTH2_TOKEN_REQUEST_URL, parameters: token_request_data).responseJSON {
         (request, response, JSON, error) in
         cb(access_token: JSON!["access_token"] as! String, refresh_token: JSON!["refresh_token"] as! String)
     }
@@ -105,18 +105,18 @@ func auth_with_refresh_token(
 //}
 
 func withAuthenticatedManager(cb: (manager: Alamofire.Manager) -> Void) {
-    withAuthenticatedManager(configureManager(), cb)
+    withAuthenticatedManager(configureManager(), cb: cb)
 }
 
 func withAuthenticatedManager(manager: Alamofire.Manager, cb: (manager: Alamofire.Manager) -> Void) {
     // This method should *not* take an access_token, and pop up a window with web view
     // to authenticate the user with Google, if possible.
     if let codes = loadCodes() {
-        auth_with_refresh_token(manager, codes.refresh_token) { (access_token: String, refresh_token: String) in
-            println("Auth'd with refresh token. New access token: \(access_token)")
+        auth_with_refresh_token(manager, refresh_token: codes.refresh_token) { (access_token: String, refresh_token: String) in
+            print("Auth'd with refresh token. New access token: \(access_token)")
 
             let url = "https://accounts.google.com/accounts/OAuthLogin?source=hangups&issueuberauth=1"
-            var request = NSMutableURLRequest(URL: NSURL(string: url)!)
+            let request = NSMutableURLRequest(URL: NSURL(string: url)!)
             request.setValue("Bearer \(access_token)", forHTTPHeaderField: "Authorization")
             manager.request(request).response { (request, response, responseObject, error) in
                 var uberauth = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
@@ -139,25 +139,25 @@ func withAuthenticatedManager(manager: Alamofire.Manager, cb: (manager: Alamofir
         }
     } else {
         promptForGoogleLogin(manager) {
-            println("Got callback, codes now \(loadCodes())")
-            withAuthenticatedManager(manager, cb)
+            print("Got callback, codes now \(loadCodes())")
+            withAuthenticatedManager(manager, cb: cb)
         }
     }
 }
 
 var loginWindowController: NSWindowController?
 func promptForGoogleLogin(manager: Alamofire.Manager, cb: () -> Void) {
-    let storyboard = NSStoryboard(name: "Main", bundle: nil)!
+    let storyboard = NSStoryboard(name: "Main", bundle: nil)
 
     loginWindowController = storyboard.instantiateControllerWithIdentifier("LoginWindowController") as? NSWindowController
 
     let loginViewController = loginWindowController?.contentViewController as? LoginViewController
     loginViewController?.manager = manager
     loginViewController?.cb = { (auth_code: String) in
-        auth_with_code(auth_code, { (access_token, refresh_token) -> Void in
-            saveCodes(access_token, refresh_token)
+        auth_with_code(auth_code) { (access_token, refresh_token) -> Void in
+            saveCodes(access_token, refresh_token: refresh_token)
             cb()
-        })
+        }
     }
 
     loginWindowController!.showWindow(nil)

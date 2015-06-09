@@ -2,15 +2,16 @@ PODS:
   - Alamofire (1.2.2)
 
 DEPENDENCIES:
-  - Alamofire (from `git@github.com:psobot/Alamofire.git`)
+  - Alamofire (from `git@github.com:psobot/Alamofire.git`, branch `swift2b1`)
 
 EXTERNAL SOURCES:
   Alamofire:
+    :branch: swift2b1
     :git: git@github.com:psobot/Alamofire.git
 
 CHECKOUT OPTIONS:
   Alamofire:
-    :commit: 31ef165f855faaf63a598fb90100082a84db4cf7
+    :commit: 47d0113b8d1f1c4e249f55356d5bb67456e9078e
     :git: git@github.com:psobot/Alamofire.git
 
 SPEC CHECKSUMS:

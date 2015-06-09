@@ -13,13 +13,16 @@ import JavaScriptCore
 func loadJavaScript(filename: String) -> NSDictionary? {
     let path = NSBundle.mainBundle().pathForResource(filename, ofType: "js")!
 
-    var err = NSErrorPointer()
-    if let content = String(contentsOfFile:path, encoding: NSUTF8StringEncoding, error: err) {
+    let err = NSErrorPointer()
+    do {
+        let content = try String(contentsOfFile:path, encoding: NSUTF8StringEncoding)
         return JSContext().evaluateScript("a = " + content)!.toDictionary()
+    } catch var error as NSError {
+        err.memory = error
     }
 
     if err != nil {
-        println("Error loading file: \(err)")
+        print("Error loading file: \(err)")
     }
 
     return nil
@@ -48,15 +51,15 @@ class PBLiteTests: XCTestCase {
         XCTAssertEqual("cgsirp", r.cgsirp)
 
         let entity = r.self_entity
-        XCTAssertEqual("101968856481625398418", entity.id_.gaia_id)
-        XCTAssertEqual("101968856481625398418", entity.id_.chat_id)
+        XCTAssertEqual("101968856481625398418", entity.id.gaia_id)
+        XCTAssertEqual("101968856481625398418", entity.id.chat_id)
 
         XCTAssertEqual("Peter Test", entity.properties.display_name!)
     }
 
     func testMessageSegmentWithFormatting() {
         let segment = MESSAGE_SEGMENT.parse([1, NSNull(), ["true", NSNull(), NSNull(), NSNull()], NSNull()])!
-        XCTAssertEqual(SegmentType.LINE_BREAK, segment.type_)
+        XCTAssert(SegmentType.LINE_BREAK == segment.type_)
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.link_data)
 
@@ -66,7 +69,7 @@ class PBLiteTests: XCTestCase {
 
     func testMessageSegmentWithLinkData() {
         let segment = MESSAGE_SEGMENT.parse([1, NSNull(), NSNull(), ["link target"]])!
-        XCTAssertEqual(1, segment.type_)
+        XCTAssert(1 == segment.type_)
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.formatting)
         XCTAssertEqual("link target", segment.link_data!.link_target!)
@@ -74,12 +77,12 @@ class PBLiteTests: XCTestCase {
 
     func testEnum() {
         let enumTestMessage = EnumTestMessage.parse([2])!
-        XCTAssertEqual(enumTestMessage.enumValue, ConversationType.GROUP)
+        XCTAssert(enumTestMessage.enumValue == ConversationType.GROUP)
     }
 
     func testArray() {
         let arrayTestMessage = ArrayTestMessage.parse([[["12"], ["23"], ["34"]]])!
-        XCTAssertEqual(count(arrayTestMessage.array), 3)
+        XCTAssertEqual(arrayTestMessage.array.count, 3)
         XCTAssertEqual("12", arrayTestMessage.array[0].id_)
         XCTAssertEqual("23", arrayTestMessage.array[1].id_)
         XCTAssertEqual("34", arrayTestMessage.array[2].id_)

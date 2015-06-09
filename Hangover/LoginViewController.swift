@@ -17,7 +17,7 @@ class LoginViewController : NSViewController {
     var cb: ((auth_code: String) -> Void)?
 
     override func viewDidLoad() {
-        var req = NSMutableURLRequest(URL: NSURL(string: OAUTH2_LOGIN_URL)!)
+        let req = NSMutableURLRequest(URL: NSURL(string: OAUTH2_LOGIN_URL)!)
         webView.resourceLoadDelegate = self
         webView.frameLoadDelegate = self
         webView.policyDelegate = self
@@ -35,8 +35,8 @@ class LoginViewController : NSViewController {
         frame: WebFrame!,
         decisionListener listener: WebPolicyDecisionListener!)
     {
-        if request.URL!.absoluteString!.rangeOfString("https://accounts.google.com/o/oauth2/approval") != nil {
-            println("should load: \(request.URL!)")
+        if request.URL!.absoluteString.rangeOfString("https://accounts.google.com/o/oauth2/approval") != nil {
+            print("should load: \(request.URL!)", appendNewline: false)
             listener.ignore()
 
             manager?.request(request).response { (request, response, responseObject, error) in

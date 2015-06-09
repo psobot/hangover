@@ -43,7 +43,7 @@ func _get_submission_payloads(submission: String) -> (client_id: String?, update
         }
         return (nil, [])
     }
-    return reduce(r, nullResult) { (($1.client_id != nil ? $1.client_id : $0.client_id), $0.updates + $1.updates)  }
+    return r.reduce(nullResult) { (($1.client_id != nil ? $1.client_id : $0.client_id), $0.updates + $1.updates)  }
 }
 
 func flatMap<A,B>(x: [A], y: A -> B?) -> [B] {
@@ -56,7 +56,7 @@ func _parse_payload(payload: [AnyObject]) -> [CLIENT_STATE_UPDATE] {
         // payload[1] is a list of state updates.
         return flatMap(payload[1] as! [NSArray]) { CLIENT_STATE_UPDATE.parse($0) }
     } else {
-        println("Ignoring payload with header: \(payload[0])")
+        print("Ignoring payload with header: \(payload[0])", appendNewline: false)
         return []
     }
 }
@@ -64,20 +64,17 @@ func _parse_payload(payload: [AnyObject]) -> [CLIENT_STATE_UPDATE] {
 //##############################################################################
 //# Message parsing utils
 //##############################################################################
-//
-//
-//def from_timestamp(microsecond_timestamp):
-//"""Convert a microsecond timestamp to a UTC datetime instance."""
-//# Create datetime without losing precision from floating point (yes, this
-//# is actually needed):
-//return datetime.datetime.fromtimestamp(
-//    microsecond_timestamp // 1000000, datetime.timezone.utc
-//    ).replace(microsecond=(microsecond_timestamp % 1000000))
-//
-//
+
+
+let MicrosecondsPerSecond = 1000000.0
+func from_timestamp(microsecond_timestamp: NSNumber) -> NSDate {
+    // Convert a microsecond timestamp to an NSDate instance.
+    return NSDate(timeIntervalSince1970: microsecond_timestamp.doubleValue / MicrosecondsPerSecond)
+}
+
 func to_timestamp(date: NSDate) -> NSNumber {
     // Convert UTC datetime to microsecond timestamp used by Hangouts.
-    return date.timeIntervalSince1970 * 1000000.0
+    return date.timeIntervalSince1970 * MicrosecondsPerSecond
 }
 //
 //
@@ -86,9 +83,7 @@ func to_timestamp(date: NSDate) -> NSNumber {
 //##############################################################################
 //
 //
-//TypingStatusMessage = namedtuple(
-//'TypingStatusMessage', ['conv_id', 'user_id', 'timestamp', 'status']
-//)
+typealias TypingStatusMessage = (conv_id: String, user_id: UserID, timestamp: NSDate, status: TypingStatus)
 //
 //
 //def parse_typing_status_message(p):
@@ -105,9 +100,7 @@ func to_timestamp(date: NSDate) -> NSNumber {
 //)
 //
 //
-//WatermarkNotification = namedtuple(
-//    'WatermarkNotification', ['conv_id', 'user_id', 'read_timestamp']
-//)
+typealias WatermarkNotification = (conv_id: String, user_id: UserID, read_timestamp: NSDate)
 //
 //
 //def parse_watermark_notification(client_watermark_notification):

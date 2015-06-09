@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Enum : NSObject, Equatable, IntegerLiteralConvertible {
+class Enum : NSObject, IntegerLiteralConvertible {
     let representation: NSNumber
     required init(value: NSNumber) {
         self.representation = value
@@ -188,7 +188,7 @@ class CLIENT_CONVERSATION : Message {
     var current_participant = [USER_ID]()
 
     class PARTICIPANT_DATA : Message {
-        var id_ = USER_ID()
+        var id = USER_ID()
         var fallback_name: NSString?
         var field: OptionalField = nil
     }
@@ -206,10 +206,10 @@ class MESSAGE_SEGMENT : Message {
     var text: NSString?
 
     class FORMATTING : Message {
-        var bold: NSString?
-        var italic: NSString?
-        var strikethrough: NSString?
-        var underline: NSString?
+        var bold: NSNumber?
+        var italic: NSNumber?
+        var strikethrough: NSNumber?
+        var underline: NSNumber?
     }
     var formatting: FORMATTING? = FORMATTING()
 
@@ -271,7 +271,7 @@ class CLIENT_MEMBERSHIP_CHANGE : Message {
 class CLIENT_EVENT : Message {
     var conversation_id = CONVERSATION_ID()
     var sender_id: USER_ID?
-    var timestamp: NSString = ""
+    var timestamp: NSNumber = 0
 
     class EVENT_STATE : Message {
         var user_id = USER_ID()
@@ -362,7 +362,7 @@ class CLIENT_ENTITY : Message {
     var field6: OptionalField = nil
     var field7: OptionalField = nil
     var field8: OptionalField = nil
-    var id_ = USER_ID()
+    var id = USER_ID()
 
     class PROPERTIES : Message {
         var type_: NSNumber?

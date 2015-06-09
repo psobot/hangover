@@ -72,6 +72,6 @@ class ChannelTests: XCTestCase {
         let input = "152\n[[2,[{\"p\":\"{\\\"1\\\":{\\\"1\\\":{\\\"1\\\":{\\\"1\\\":1,\\\"2\\\":1}},\\\"4\\\":\\\"1433710435389\\\",\\\"5\\\":\\\"S1\\\"},\\\"3\\\":{\\\"1\\\":{\\\"1\\\":1},\\\"2\\\":\\\"lcsw_hangoutsBB487C95\\\"}}\"}]]\n]\n"
         let parser = PushDataParser()
         let results = parser.getSubmissions(input.dataUsingEncoding(NSUTF8StringEncoding)!)
-        XCTAssertEqual(1, count(results))
+        XCTAssertEqual(1, results.count)
     }
 }

@@ -3,5 +3,5 @@
 
 
 use_frameworks!
-pod 'Alamofire', git: 'git@github.com:psobot/Alamofire.git'
+pod 'Alamofire', git: 'git@github.com:psobot/Alamofire.git', branch: 'swift2b1'
 

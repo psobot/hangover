@@ -52,10 +52,10 @@ class Channel : NSObject, NSURLSessionDataDelegate {
     func getCookieValue(key: String) -> String? {
         if let c = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies {
             if let match = (c.filter {
-                ($0 as! NSHTTPCookie).name == key &&
-                ($0 as! NSHTTPCookie).domain == ".google.com"
-            }).first as? NSHTTPCookie {
-                return match.value()
+                ($0 as NSHTTPCookie).name == key &&
+                ($0 as NSHTTPCookie).domain == ".google.com"
+            }).first {
+                return match.value
             }
         }
         return nil
@@ -97,7 +97,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
         //  This method uses keep-alive to make re-opening the request faster, but
         //  the remote server will set the "Connection: close" header once an hour.
 
-        println("Opening long polling request.")
+        print("Opening long polling request.")
         //  Make the request!
         let queryString = "VER=8&RID=rpc&t=1&CI=0&ctype=hangouts&TYPE=xmlhttp&gsessionid=\(gSessionIDParam!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!)&SID=\(sidParam!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!)"
         let url = "\(CHANNEL_URL_PREFIX)/channel/bind?\(queryString)"
@@ -107,12 +107,12 @@ class Channel : NSObject, NSURLSessionDataDelegate {
         var request = NSMutableURLRequest(URL: NSURL(string: url)!)
 
         let sapisid = getCookieValue("SAPISID")!
-        println("SAPISID param: \(sapisid)")
+        print("SAPISID param: \(sapisid)")
         for (k, v) in getAuthorizationHeaders(sapisid) {
-            println("Setting header \(k) to \(v)")
+            print("Setting header \(k) to \(v)")
             request.setValue(v, forHTTPHeaderField: k)
         }
-        println("Making request to URL: \(url)")
+        print("Making request to URL: \(url)")
 
 //        let cfg = NSURLSessionConfiguration.defaultSessionConfiguration()
 //        cfg.HTTPCookieStorage = NSHTTPCookieStorage.sharedHTTPCookieStorage()
@@ -126,7 +126,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
             responseObject: AnyObject?,
             error: NSError?) in
 
-            println("long poll completed with status code: \(response?.statusCode)")
+            print("long poll completed with status code: \(response?.statusCode)")
             if response?.statusCode >= 400 {
                 NSLog("Request failed with: \(NSString(data: responseObject as! NSData, encoding: 4))")
                 self.need_new_sid = true
@@ -144,7 +144,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
 
 
     func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
-        println("GOT DATA \(NSString(data: data, encoding: NSUTF8StringEncoding))")
+        print("GOT DATA \(NSString(data: data, encoding: NSUTF8StringEncoding))")
     }
 
     func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
@@ -200,7 +200,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
                 NSLog("Request failed: \(error)")
             } else {
                 let responseValues = parseSIDResponse(responseObject as! NSData)
-                println("Got SID response back: \(NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding))")
+                print("Got SID response back: \(NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding))")
                 self.sidParam = responseValues.sid
                 self.gSessionIDParam = responseValues.gSessionID
                 NSLog("New SID: \(self.sidParam)")
@@ -247,7 +247,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
         // Only needs to be called when a new channel (SID/gsessionid) is opened.
 
         if isSubscribing { return }
-        println("Subscribing channel...")
+        print("Subscribing channel...")
         isSubscribing = true
 
         // Temporary workaround for #58
@@ -274,13 +274,13 @@ class Channel : NSObject, NSURLSessionDataDelegate {
                 request.setValue(v, forHTTPHeaderField: k)
             }
 
-            println("Making request to URL: \(url)")
+            print("Making request to URL: \(url)")
             self.manager.request(request).response { (
                 request: NSURLRequest,
                 response: NSHTTPURLResponse?,
                 responseObject: AnyObject?,
                 error: NSError?) in
-                println("Channel is now subscribed.")
+                print("Channel is now subscribed.")
                 self.isSubscribed = true
                 cb?()
             }
@@ -369,18 +369,18 @@ class PushDataParser {
                 let lengths = Regex(Channel.LEN_REGEX).findall(decoded)
                 if let length_str = lengths.first {
                     let length_str_without_newline = length_str.substringToIndex(advance(length_str.endIndex, -1))
-                    if let length = length_str_without_newline.toInt() {
-                        if decodedUtf16LengthInChars - count(length_str) < length {
+                    if let length = Int(length_str_without_newline) {
+                        if decodedUtf16LengthInChars - length_str.characters.count < length {
                           break
                         }
 
-                        let subData = bufUTF16.subdataWithRange(NSMakeRange(count(length_str) * 2, length * 2))
+                        let subData = bufUTF16.subdataWithRange(NSMakeRange(length_str.characters.count * 2, length * 2))
                         let submission = NSString(data: subData, encoding: NSUTF16BigEndianStringEncoding)! as String
                         submissions.append(submission)
 
                         let submissionAsUTF8 = submission.dataUsingEncoding(NSUTF8StringEncoding)!
 
-                        let removeRange = NSMakeRange(0, count(length_str) + submissionAsUTF8.length)
+                        let removeRange = NSMakeRange(0, length_str.characters.count + submissionAsUTF8.length)
                         buf.replaceBytesInRange(removeRange, withBytes: nil, length: 0)
                     } else {
                       break

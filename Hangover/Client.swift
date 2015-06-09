@@ -63,7 +63,7 @@ class Client : ChannelDelegate {
     func connect() {
         self.initialize_chat { (id: InitialData?) in
             self.initial_data = id
-            println("Chat initialized. Opening channel...")
+            print("Chat initialized. Opening channel...")
 
             self.channel = Channel(manager: self.manager)
             self.channel?.delegate = self
@@ -87,7 +87,7 @@ class Client : ChannelDelegate {
         let fid = (CHAT_INIT_PARAMS["fid"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
         let ec = (CHAT_INIT_PARAMS["ec"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
         let url = "\(PVT_TOKEN_URL)?prop=\(prop)&fid=\(fid)&ec=\(ec)"
-        println("Fetching pvt token: \(url)")
+        print("Fetching pvt token: \(url)")
         var request = NSMutableURLRequest(URL: NSURL(string: url)!)
         manager.request(request).response { (
             request: NSURLRequest,
@@ -108,7 +108,7 @@ class Client : ChannelDelegate {
             let pvt_enc = (self.CHAT_INIT_PARAMS["pvt"] as! String).stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
 
             let url = "\(CHAT_INIT_URL)?prop=\(prop)&fid=\(fid)&ec=\(ec)&pvt=\(pvt_enc)"
-            println("Initializing chat: \(url)")
+            print("Initializing chat: \(url)")
             var request = NSMutableURLRequest(URL: NSURL(string: url)!)
             self.manager.request(request).response { (
                 request: NSURLRequest,
@@ -117,19 +117,19 @@ class Client : ChannelDelegate {
                 error: NSError?) in
 
                 let body = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
-                println(error?.description)
-                println(response?.description)
-                println("Received chat init response: '\(body)'")
+                print(error?.description)
+                print(response?.description)
+                print("Received chat init response: '\(body)'")
 
                 // Parse the response by using a regex to find all the JS objects, and
                 // parsing them. Not everything will be parsable, but we don't care if
                 // an object we don't need can't be parsed.
 
                 var data_dict = Dictionary<String, AnyObject?>()
-                for data in Regex(CHAT_INIT_REGEX,
-                    options: NSRegularExpressionOptions.CaseInsensitive |
-                    NSRegularExpressionOptions.DotMatchesLineSeparators
-                ).matches(body) {
+                let regex = Regex(CHAT_INIT_REGEX,
+                    options: NSRegularExpressionOptions.CaseInsensitive.union(NSRegularExpressionOptions.DotMatchesLineSeparators)
+                )
+                for data in regex.matches(body) {
 
                     if data.rangeOfString("data:function") == nil {
                         let dict = JSContext().evaluateScript("a = " + data).toDictionary()!
@@ -143,7 +143,7 @@ class Client : ChannelDelegate {
                         if let dict = JSContext().evaluateScript("a = " + cleanedData).toDictionary() {
                             data_dict[dict["key"] as! String] = dict["data"]
                         } else {
-                            println("Could not parse!")
+                            print("Could not parse!")
                         }
                     }
                 }
@@ -159,7 +159,7 @@ class Client : ChannelDelegate {
                 let self_entity = CLIENT_GET_SELF_INFO_RESPONSE.parse((data_dict["ds:20"] as! NSArray)[0] as? NSArray)!.self_entity
 
                 let initial_conv_states_raw = ((data_dict["ds:19"] as! NSArray)[0] as! NSArray)[3] as! NSArray
-                let initial_conv_states = map(initial_conv_states_raw as! [NSArray]) {
+                let initial_conv_states = (initial_conv_states_raw as! [NSArray]).map {
                     CLIENT_CONVERSATION_STATE.parse($0)!
                 }
                 let initial_conv_parts = initial_conv_states.flatMap { $0.conversation.participant_data }
@@ -209,7 +209,7 @@ class Client : ChannelDelegate {
         let result = parse_submission(message as String)
 
         if let new_client_id = result.client_id {
-            println("Setting client ID to \(new_client_id)")
+            print("Setting client ID to \(new_client_id)")
             self.client_id = new_client_id
         }
 
@@ -217,7 +217,7 @@ class Client : ChannelDelegate {
             self.active_client_state = (
                 state_update.state_update_header.active_client_state
             )
-            println("Updating state: \(state_update)")
+            print("Updating state: \(state_update)")
             delegate?.clientDidUpdateState(self, update: state_update)
         }
 
@@ -266,8 +266,14 @@ class Client : ChannelDelegate {
     ) {
         let url = "https://clients6.google.com/chat/v1/\(endpoint)"
 
-        var error = NSErrorPointer()
-        let body_json = NSJSONSerialization.dataWithJSONObject(body, options: nil, error: error)
+        let error = NSErrorPointer()
+        let body_json: NSData?
+        do {
+            body_json = try NSJSONSerialization.dataWithJSONObject(body, options: [])
+        } catch var error1 as NSError {
+            error.memory = error1
+            body_json = nil
+        }
 
         base_request(url,
             content_type: "application/json+protobuf",
@@ -304,12 +310,7 @@ class Client : ChannelDelegate {
         manager.request(request).response(cb)
     }
 
-    //    ###########################################################################
-    //    # Raw API request methods
-    //    ###########################################################################
-    //
-
-    private func syncallnewevents(timestamp: NSDate, cb: (response: CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE?) -> Void) {
+    private func syncAllNewEvents(timestamp: NSDate, cb: (response: CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE?) -> Void) {
         //    List all events occurring at or after timestamp.
         //
         //    This method requests protojson rather than json so we have one chat
@@ -329,17 +330,12 @@ class Client : ChannelDelegate {
             // max_response_size_bytes
             1048576
         ]
-
-        self.request("conversations/syncallnewevents", body: data) { (
-            request: NSURLRequest,
-            response: NSHTTPURLResponse?,
-            responseObject: AnyObject?,
-            error: NSError?) -> Void in
+        self.request("conversations/syncallnewevents", body: data, use_json: false) {
+            request, response, responseObject, error in
             cb(response: CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE.parseRawJSON(responseObject! as! NSData))
         }
     }
 
-    //
     //    @asyncio.coroutine
     //    def sendchatmessage(
     //            self, conversation_id, segments, image_id=None,
@@ -448,12 +444,11 @@ class Client : ChannelDelegate {
             responseObject: AnyObject?,
             error: NSError?) -> Void in
 
-            var parseError: NSError?
-            let parsedObject = NSJSONSerialization.JSONObjectWithData(responseObject as! NSData, options: nil, error:&parseError) as? NSDictionary
+            let parsedObject = try! NSJSONSerialization.JSONObjectWithData(responseObject as! NSData, options: []) as? NSDictionary
 
             let status = ((parsedObject?["response_header"] as? NSDictionary) ?? NSDictionary())["status"] as? String
             if status != "OK" {
-                println("Unexpected status from setActiveClient: \(parsedObject!)")
+                print("Unexpected status from setActiveClient: \(parsedObject!)")
             }
         }
 //        res = json.loads(res.body.decode())

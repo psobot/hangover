@@ -62,7 +62,7 @@ extension Dictionary {
             parts.append(query)
         }
 
-        return join("&", parts)
+        return "&".join(parts)
     }
 
     func urlEncodedQueryStringWithEncoding(encoding: NSStringEncoding) -> String {
@@ -75,7 +75,7 @@ extension Dictionary {
             parts.append(query)
         }
 
-        return join("&", parts)
+        return "&".join(parts)
     }
 
 }

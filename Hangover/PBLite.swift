@@ -24,76 +24,6 @@ import Foundation
 //
 //TODO: Serialization code is currently unused and doesn't have any tests.
 
-class Field {
-    // An untyped field, corresponding to a primitive type.
-    let is_optional: Bool
-    init(is_optional: Bool = false) {
-        self.is_optional = is_optional
-    }
-
-    func parse(input: AnyObject?) -> AnyObject? {
-        return input
-    }
-
-    func serialize(input: AnyObject?) -> AnyObject? {
-        return self.parse(input)
-    }
-}
-
-protocol GoogleEnum {
-    static func fromRawValue(Int) -> GoogleEnum
-    static func fromRawValue(String) -> GoogleEnum
-    func toRawValue() -> Int
-}
-
-class EnumField<_enum: GoogleEnum> {
-    // An untyped field, corresponding to a primitive type.
-    func parse(input: String) -> GoogleEnum? {
-        return _enum.fromRawValue(input)
-    }
-
-    func serialize(input: String?) -> String? {
-        return self.parse(input!)?.toRawValue().description
-    }
-}
-
-class RepeatedField {
-    // A field which may be repeated any number of times.
-    let field: Field
-    let is_optional: Bool
-
-    init(field: Field, is_optional: Bool = false) {
-        self.field = field
-        self.is_optional = is_optional
-    }
-
-    func parse(input: AnyObject?, serialize: Bool = false) -> AnyObject? {
-        if input == nil && !is_optional {
-            //  raise error? not an optional field
-            return nil
-        } else if input == nil && is_optional {
-            return nil
-        }
-
-        if let arr = input as? NSArray {
-            return map(arr) { (field_input: AnyObject?) in
-                if serialize {
-                    return self.field.serialize(field_input)!
-                } else {
-                    return self.field.parse(field_input)!
-                }
-            }
-        } else {
-            //  Raise error: expecting array
-            return nil
-        }
-    }
-
-    func serialize(input: AnyObject?) -> AnyObject? {
-        return self.parse(input, serialize: true)
-    }
-}
-
 typealias OptionalField = AnyObject?
 
 func unwrap(any:Any) -> Any? {
@@ -102,7 +32,7 @@ func unwrap(any:Any) -> Any? {
         return any
     }
     if mi.count == 0 { return nil } // Optional.None
-    let (name,some) = mi[0]
+    let (_,some) = mi[0]
     return some.valueType
 }
 
@@ -112,7 +42,7 @@ func unwrapArray(any:Any) -> Any? {
         return any
     }
     if mi.count == 0 { return nil } // Optional.None
-    let (name,some) = mi[0]
+    let (_,some) = mi[0]
     return some.valueType
 }
 
@@ -154,7 +84,7 @@ class Message : NSObject {
         }
 
         if let arr = input {
-            var instance = self()
+            let instance = self()
             let reflection = reflect(instance)
             for var i = 0; i < min(arr.count, reflection.count - 1); i++ {
                 let propertyName = reflection[i + 1].0
@@ -184,10 +114,10 @@ class Message : NSObject {
                         instance.setValue(nil, forKey: propertyName)
                     } else {
                         if let elementType = getArrayMessageType(property) {
-                            let val = map(arr[i] as! NSArray) { elementType.parse($0 as? NSArray)! }
+                            let val = (arr[i] as! NSArray).map { elementType.parse($0 as? NSArray)! }
                             instance.setValue(val, forKey:propertyName)
                         } else if let elementType = getArrayEnumType(property) {
-                            let val = map(arr[i] as! NSArray) { elementType(value: ($0 as! NSNumber)) }
+                            let val = (arr[i] as! NSArray).map { elementType(value: ($0 as! NSNumber)) }
                             instance.setValue(val, forKey:propertyName)
                         } else {
                             instance.setValue(arr[i], forKey: propertyName)
@@ -204,10 +134,8 @@ class Message : NSObject {
 
     func parseRawJSON(input: NSData) -> Self? { return self.dynamicType.parseRawJSON(input) }
     class func parseRawJSON(input: NSData) -> Self? {
-        var parseError: NSError?
-        if let parsedObject = NSJSONSerialization.JSONObjectWithData(input,
-            options: NSJSONReadingOptions.AllowFragments,
-            error:&parseError) as? NSDictionary {
+        if let parsedObject = try! NSJSONSerialization.JSONObjectWithData(input,
+            options: NSJSONReadingOptions.AllowFragments) as? NSDictionary {
                 return self.parseJSON(parsedObject)
         }
         return nil
@@ -215,7 +143,7 @@ class Message : NSObject {
 
     func parseJSON(input: NSDictionary) -> Self? { return self.dynamicType.parseJSON(input) }
     class func parseJSON(obj: NSDictionary) -> Self? {
-        var instance = self()
+        let instance = self()
         let reflection = reflect(instance)
         for var i = 1; i < reflection.count; i++ {
             let propertyName = reflection[i].0
@@ -247,10 +175,10 @@ class Message : NSObject {
                     instance.setValue(nil, forKey: propertyName)
                 } else {
                     if let elementType = getArrayMessageType(property) {
-                        let val = map(value as! NSArray) { elementType.parseJSON($0 as! NSDictionary)! }
+                        let val = (value as! NSArray).map { elementType.parseJSON($0 as! NSDictionary)! }
                         instance.setValue(val, forKey:propertyName)
                     } else if let elementType = getArrayEnumType(property) {
-                        let val = map(value as! NSArray) { elementType(value: ($0 as! NSNumber)) }
+                        let val = (value as! NSArray).map { elementType(value: ($0 as! NSNumber)) }
                         instance.setValue(val, forKey:propertyName)
                     } else {
                         instance.setValue(value, forKey: propertyName)

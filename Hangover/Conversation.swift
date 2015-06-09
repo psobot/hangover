@@ -19,32 +19,35 @@ class Conversation {
 
     typealias EventID = String
 
-//    var client: Client
-//    var user_list: UserList
-//    var conversation: ClientConversation
-//    var events = [ConversationEvent]()
-//    var events_dict = Dictionary<EventID, ConversationEvent>()
-//    var send_message_lock = false//asyncio.Lock()
-//
-//    init(client, user_list, client_conversation, client_events=[]) {
-//        // Initialize a new Conversation.
-//        for event_ in client_events:
-//        self.add_event(event_)
-//    }
-//
-//    func _on_watermark_notification(notif) {
-//        // Update the conversations latest_read_timestamp.
-//        if self.get_user(notif.user_id).is_self:
-//        logger.info('latest_read_timestamp for {} updated to {}'
-//        .format(self.id_, notif.read_timestamp))
-//        self_conversation_state = (
-//        self._conversation.self_conversation_state
-//        )
-//        self_conversation_state.self_read_state.latest_read_timestamp = (
-//        to_timestamp(notif.read_timestamp)
-//        )
-//    }
-//
+    var client: Client
+    var user_list: UserList
+    var conversation: CLIENT_CONVERSATION
+    var events = [ConversationEvent]()
+    var events_dict = Dictionary<EventID, ConversationEvent>()
+    var send_message_lock = false//asyncio.Lock()
+
+    init(client: Client,
+        user_list: UserList,
+        client_conversation: CLIENT_CONVERSATION,
+        client_events: [CLIENT_EVENT] = []
+    ) {
+        self.client = client
+        self.user_list = user_list
+        self.conversation = client_conversation
+
+        for event in client_events {
+            add_event(event)
+        }
+    }
+
+    func on_watermark_notification(notif: WatermarkNotification) {
+        // Update the conversations latest_read_timestamp.
+        if self.get_user(notif.user_id).is_self {
+            print("latest_read_timestamp for \(self.id) updated to \(notif.read_timestamp)")
+            self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = to_timestamp(notif.read_timestamp)
+        }
+    }
+
 //    func update_conversation(client_conversation) {
 //        // Update the internal ClientConversation.
 //        // When latest_read_timestamp is 0, this seems to indicate no change
@@ -61,34 +64,34 @@ class Conversation {
 //            )
 //        }
 //    }
-//
-//    class func _wrap_event(event_: ClientEvent) -> ConversationEvent {
-//        // Wrap ClientEvent in ConversationEvent subclass.
-//        if event_.chat_message != nil {
-//            return conversation_event.ChatMessageEvent(event_)
-//        } else if event_.conversation_rename != nil {
-//            return conversation_event.RenameEvent(event_)
-//        } else if event_.membership_change != nil {
-//            return conversation_event.MembershipChangeEvent(event_)
-//        } else {
-//            return conversation_event.ConversationEvent(event_)
-//        }
-//    }
-//
-//    func add_event(event_) -> ConversationEvent {
-//        // Add a ClientEvent to the Conversation.
-//        // Returns an instance of ConversationEvent or subclass.
-//        let conv_event = self._wrap_event(event_)
-//        self._events.append(conv_event)
-//        self._events_dict[conv_event.id_] = conv_event
-//        return conv_event
-//    }
-//
-//    func get_user(user_id) -> User {
-//        // Return the User instance with the given UserID.
-//        return self._user_list.get_user(user_id)
-//    }
-//
+
+    private class func wrap_event(event: CLIENT_EVENT) -> ConversationEvent {
+        // Wrap ClientEvent in ConversationEvent subclass.
+        if event.chat_message != nil {
+            return ChatMessageEvent(client_event: event)
+        } else if event.conversation_rename != nil {
+            return RenameEvent(client_event: event)
+        } else if event.membership_change != nil {
+            return MembershipChangeEvent(client_event: event)
+        } else {
+            return ConversationEvent(client_event: event)
+        }
+    }
+
+    func add_event(event: CLIENT_EVENT) -> ConversationEvent {
+        // Add a ClientEvent to the Conversation.
+        // Returns an instance of ConversationEvent or subclass.
+        let conv_event = Conversation.wrap_event(event)
+        self.events.append(conv_event)
+        self.events_dict[conv_event.id] = conv_event
+        return conv_event
+    }
+
+    func get_user(user_id: UserID) -> User {
+        // Return the User instance with the given UserID.
+        return self.user_list.get_user(user_id)
+    }
+
 //    func send_message(segments, image_file=None, image_id=None, cb: (() -> Void)?) {
 //        // Send a message to this conversation.
 //
@@ -111,13 +114,13 @@ class Conversation {
 //                if self.is_off_the_record
 //                else OffTheRecordStatus.ON_THE_RECORD)
 //            if image_file {
-//                image_id = self._client.upload_image(image_file) {
+//                image_id = self.client.upload_image(image_file) {
 //                    self.send_message(segments, nil, image_id, cb)
 //                }
 //                return
 //            }
 //
-//            self._client.sendchatmessage(
+//            self.client.sendchatmessage(
 //                self.id_, segments.map { $0.serialize },
 //                image_id=image_id, otr_status=otr_status, cb
 //            )
@@ -126,34 +129,34 @@ class Conversation {
 //        func leave(cb: (() -> Void)?) {
 //            // Leave conversation.
 //            if self._conversation.type_ == ConversationType.GROUP {}
-//            self._client.removeUser(self.id_, cb)
+//            self.client.removeUser(self.id_, cb)
 //        } else {
-//            self._client.deleteConversation(self.id_, cb)
+//            self.client.deleteConversation(self.id_, cb)
 //        }
 //    }
-//
-//    func rename(name, cb: (() -> Void)?) {
-//        // Rename the conversation.
-//
-//        // Hangouts only officially supports renaming group conversations, so
-//        // custom names for one-to-one conversations may or may not appear in all
-//        // first party clients.
-//        self._client.setchatname(self.id_, name, cb)
-//    }
-//
+
+    func rename(name: String, cb: (() -> Void)?) {
+        // Rename the conversation.
+
+        // Hangouts only officially supports renaming group conversations, so
+        // custom names for one-to-one conversations may or may not appear in all
+        // first party clients.
+        self.client.setChatName(self.id, name: name, cb: cb)
+    }
+
 //    func set_notification_level(level, cb: (() -> Void)?) {
 //        // Set the notification level of the conversation.
 //        // Pass ClientNotificationLevel.QUIET to disable notifications,
 //        // or ClientNotificationLevel.RING to enable them.
-//        self._client.setconversationnotificationlevel(self.id_, level, cb)
+//        self.client.setconversationnotificationlevel(self.id_, level, cb)
 //    }
-//
-//    func set_typing(typing: TypingStatus=TypingStatus.TYPING, cb: (() -> Void)?=nil) {
-//        // Set typing status.
-//        // TODO: Add rate-limiting to avoid unnecessary requests.
-//        client?.setTyping(id_, typing, cb)
-//    }
-//
+
+    func set_typing(typing: TypingStatus = TypingStatus.TYPING, cb: (() -> Void)? = nil) {
+        // Set typing status.
+        // TODO: Add rate-limiting to avoid unnecessary requests.
+        client.setTyping(id, typing: typing, cb: cb)
+    }
+
 //    func update_read_timestamp(read_timestamp: NSDate?=nil, cb: (() -> Void)?=nil) {
 //        // Update the timestamp of the latest event which has been read.
 //        // By default, the timestamp of the newest event is used.
@@ -173,7 +176,7 @@ class Conversation {
 //            state.self_read_state.latest_read_timestamp = (
 //                to_timestamp(read_timestamp)
 //            )
-//            self._client.updatewatermark(self.id_, read_timestamp, cb)
+//            self.client.updatewatermark(self.id_, read_timestamp, cb)
 //        }
 //    }
 //
@@ -198,7 +201,7 @@ class Conversation {
 //        else:
 //        logger.info('Loading events for conversation {} before {}'
 //        .format(self.id_, conv_event.timestamp))
-//        res = yield from self._client.getconversation(
+//        res = yield from self.client.getconversation(
 //        self.id_, conv_event.timestamp, max_events
 //        )
 //        conv_events = [self._wrap_event(client_event) for client_event
@@ -231,14 +234,14 @@ class Conversation {
 //        func get_event(event_id: EventID) -> ConversationEvent {
 //            return events_dict[event_id]
 //        }
-//
-//        var id_ {
-//            get {
-//                // The conversation's ID.
-//                return self._conversation.conversation_id.id_
-//            }
-//        }
-//
+
+    var id: String {
+        get {
+            // The conversation's ID.
+            return self.conversation.conversation_id!.id as String
+        }
+    }
+
 //        var users {
 //            get {
 //                // User instances of the conversation's current participants.

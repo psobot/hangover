@@ -112,7 +112,7 @@ class ActiveClientState : Enum {
  */
 
 class CONVERSATION_ID : Message {
-    var id_: NSString = ""
+    var id: NSString = ""
 }
 
 class USER_ID : Message {
@@ -136,8 +136,8 @@ class CLIENT_SET_FOCUS_NOTIFICATION : Message {
 }
 
 class CLIENT_CONVERSATION : Message {
-    var conversation_id = CONVERSATION_ID()
-    var type_ = ConversationType()
+    var conversation_id: CONVERSATION_ID?
+    var type = ConversationType()
     var name: NSString?
 
     class STATE : Message {
@@ -150,7 +150,7 @@ class CLIENT_CONVERSATION : Message {
 
         class READ_STATE : Message {
             var participant_id = USER_ID()
-            var latest_read_timestamp: NSString = ""
+            var latest_read_timestamp: NSNumber = 0 // TODO: Verify this is an NSNumber
         }
         var self_read_state = READ_STATE()
 
@@ -328,7 +328,7 @@ class CLIENT_STATE_UPDATE : Message {
     var settings_notification: OptionalField = nil
     var view_modification: OptionalField = nil
     var easter_egg_notification: OptionalField = nil
-    var client_conversation = CLIENT_CONVERSATION()
+    var client_conversation: CLIENT_CONVERSATION?
     var self_presence_notification: OptionalField = nil
     var delete_notification: OptionalField = nil
     var presence_notification: OptionalField = nil

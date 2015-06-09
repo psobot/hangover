@@ -11,12 +11,29 @@ import Foundation
 import JavaScriptCore
 
 func loadJavaScript(filename: String) -> NSDictionary? {
-    let path = NSBundle.mainBundle().pathForResource(filename, ofType: "js")!
+    let path = NSBundle.mainBundle().pathForResource("Data/" + filename, ofType: "js")!
 
     let err = NSErrorPointer()
     do {
         let content = try String(contentsOfFile:path, encoding: NSUTF8StringEncoding)
         return JSContext().evaluateScript("a = " + content)!.toDictionary()
+    } catch var error as NSError {
+        err.memory = error
+    }
+
+    if err != nil {
+        print("Error loading file: \(err)")
+    }
+
+    return nil
+}
+
+func loadMessage(filename: String) -> String? {
+    let path = NSBundle.mainBundle().pathForResource("Data/" + filename, ofType: "message")!
+
+    let err = NSErrorPointer()
+    do {
+        return try String(contentsOfFile:path, encoding: NSUTF8StringEncoding)
     } catch var error as NSError {
         err.memory = error
     }
@@ -83,9 +100,9 @@ class PBLiteTests: XCTestCase {
     func testArray() {
         let arrayTestMessage = ArrayTestMessage.parse([[["12"], ["23"], ["34"]]])!
         XCTAssertEqual(arrayTestMessage.array.count, 3)
-        XCTAssertEqual("12", arrayTestMessage.array[0].id_)
-        XCTAssertEqual("23", arrayTestMessage.array[1].id_)
-        XCTAssertEqual("34", arrayTestMessage.array[2].id_)
+        XCTAssertEqual("12", arrayTestMessage.array[0].id)
+        XCTAssertEqual("23", arrayTestMessage.array[1].id)
+        XCTAssertEqual("34", arrayTestMessage.array[2].id)
     }
 
     func testJSON() {
@@ -98,4 +115,34 @@ class PBLiteTests: XCTestCase {
         XCTAssertEqual(resp!.response_header.request_trace_id, "5919526157227634454")
         XCTAssertEqual(resp!.response_header.current_server_time, "1433707150506000")
     }
+
+    func testIncomingTypingMessage() {
+        let message = loadMessage("typing")!
+        let parsed = parse_submission(message).updates
+        XCTAssertEqual(1, parsed.count)
+    }
+
+    func testIncomingCharactersMessage() {
+        let message = loadMessage("characters")!
+        let parsed = parse_submission(message).updates
+        XCTAssertEqual(3, parsed.count)
+
+        let first = parsed[0]
+
+        XCTAssert(first.state_update_header.active_client_state == ActiveClientState.IS_ACTIVE_CLIENT)
+        XCTAssertNil(first.state_update_header.field1)
+        XCTAssertEqual(first.state_update_header.request_trace_id, "507595749316912651")
+        XCTAssertEqual(first.state_update_header.field2 as! Array<Array<NSNumber>>,  [[NSNumber(int: 0)]])
+        XCTAssertEqual(first.state_update_header.current_server_time, NSNumber(unsignedLongLong: 1433824369966000))
+        XCTAssertEqual(first.state_update_header.field3 as! Array<NSNumber>, [NSNumber(int: 1)])
+
+        //  These two fields are not included.
+        XCTAssertNil(first.state_update_header.field4)
+        XCTAssertNil(first.state_update_header.updating_client_id)
+
+        XCTAssertNil(first.conversation_notification)
+
+        XCTAssertEqual(first.event_notification!.event.conversation_id.id, "Ugww93XG1Ah_CUEKJzJ4AaABAQ")
+    }
+
 }

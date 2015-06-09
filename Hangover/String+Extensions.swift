@@ -22,4 +22,8 @@ extension String {
 
         return  Range<String.Index>(start: i1, end: i2)
     }
+
+    func contains(find: String) -> Bool{
+        return self.rangeOfString(find) != nil
+    }
 }

@@ -26,14 +26,12 @@ import Foundation
 
 typealias OptionalField = AnyObject?
 
-func unwrap(any:Any) -> Any? {
-    let mi:MirrorType = reflect(any)
-    if mi.disposition != .Optional {
-        return any
-    }
-    if mi.count == 0 { return nil } // Optional.None
-    let (_,some) = mi[0]
-    return some.valueType
+func unwrapOptionalType(any: Any) -> Any.Type? {
+    //  This is super nasty, but works. (Doesn't work in Playground, because of lldb name mangling.)
+
+    let dynamicTypeName = "\(reflect(any).valueType)"
+    let containedTypeName = dynamicTypeName.stringByReplacingOccurrencesOfString("Swift.Optional<", withString: "").stringByReplacingOccurrencesOfString(">", withString: "")
+    return NSClassFromString(containedTypeName)
 }
 
 func unwrapArray(any:Any) -> Any? {
@@ -91,7 +89,7 @@ class Message : NSObject {
                 let property = reflection[i + 1].1.value
 
                 //  Unwrapping an optional sub-struct
-                if let type = unwrap(property) as? Message.Type {
+                if let type = unwrapOptionalType(property) as? Message.Type {
                     let val: (AnyObject?) = type.parse(arr[i] as? NSArray)
                     instance.setValue(val, forKey: propertyName)
 
@@ -101,7 +99,7 @@ class Message : NSObject {
                     instance.setValue(val, forKey: propertyName)
 
                 //  Unwrapping an optional enum
-                } else if let type = unwrap(property) as? Enum.Type {
+                } else if let type = unwrapOptionalType(property) as? Enum.Type {
                     let val: (AnyObject?) = type(value: (arr[i] as! NSNumber))
                     instance.setValue(val, forKey: propertyName)
 
@@ -152,7 +150,7 @@ class Message : NSObject {
             let value: AnyObject? = obj[propertyName]
 
             //  Unwrapping an optional sub-struct
-            if let type = unwrap(property) as? Message.Type {
+            if let type = unwrapOptionalType(property) as? Message.Type {
                 let val: (AnyObject?) = type.parseJSON(value as! NSDictionary)
                 instance.setValue(val, forKey: propertyName)
 
@@ -162,7 +160,7 @@ class Message : NSObject {
                 instance.setValue(val, forKey: propertyName)
 
                 //  Unwrapping an optional enum
-            } else if let type = unwrap(property) as? Enum.Type {
+            } else if let type = unwrapOptionalType(property) as? Enum.Type {
                 let val: (AnyObject?) = type(value: (value as! NSNumber))
                 instance.setValue(val, forKey: propertyName)
 

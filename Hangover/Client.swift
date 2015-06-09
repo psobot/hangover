@@ -218,7 +218,24 @@ class Client : ChannelDelegate {
                 state_update.state_update_header.active_client_state
             )
             print("Updating state: \(state_update)")
+
+            let conversation = state_update.client_conversation?.conversation_id?.id
+            print("Conversation id: \(conversation)")
+
+            NSNotificationCenter.defaultCenter().postNotificationName(
+                ClientStateUpdatedNotification,
+                object: self,
+                userInfo: [ClientStateUpdatedNewStateKey: state_update]
+            )
             delegate?.clientDidUpdateState(self, update: state_update)
+
+            //  Test sending something back...
+            if let conversation_id = conversation {
+                delay(2) {
+                    print("sending typing to conversation ID \(conversation)")
+                    self.setTyping(conversation_id as String, typing: TypingStatus.TYPING)
+                }
+            }
         }
 
         //syncallnewevents(NSDate()) { (response) -> Void in
@@ -308,6 +325,14 @@ class Client : ChannelDelegate {
         request.setValue(content_type, forHTTPHeaderField: "Content-Type")
 
         manager.request(request).response(cb)
+    }
+
+    private func verifyResponseOK(responseObject: NSData) {
+        let parsedObject = try! NSJSONSerialization.JSONObjectWithData(responseObject, options: []) as? NSDictionary
+        let status = ((parsedObject?["response_header"] as? NSDictionary) ?? NSDictionary())["status"] as? String
+        if status != "OK" {
+            print("Unexpected status response: \(parsedObject!)")
+        }
     }
 
     private func syncAllNewEvents(timestamp: NSDate, cb: (response: CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE?) -> Void) {
@@ -426,7 +451,7 @@ class Client : ChannelDelegate {
     //                ['uploader_service.GoogleRupioAdditionalInfo']
     //                ['completionInfo']['customerSpecificInfo']['photoid'])
     //
-    func setActiveClient(is_active: Bool, timeout_secs: Int) {
+    func setActiveClient(is_active: Bool, timeout_secs: Int, cb: (() -> Void)? = nil) {
         let data: Array<AnyObject> = [
             self.getRequestHeader(),
             // is_active: whether the client is active or not
@@ -438,24 +463,9 @@ class Client : ChannelDelegate {
         ]
 
         // Set the active client.
-        self.request("clients/setactiveclient", body: data, use_json: true) { (
-            request: NSURLRequest,
-            response: NSHTTPURLResponse?,
-            responseObject: AnyObject?,
-            error: NSError?) -> Void in
-
-            let parsedObject = try! NSJSONSerialization.JSONObjectWithData(responseObject as! NSData, options: []) as? NSDictionary
-
-            let status = ((parsedObject?["response_header"] as? NSDictionary) ?? NSDictionary())["status"] as? String
-            if status != "OK" {
-                print("Unexpected status from setActiveClient: \(parsedObject!)")
-            }
+        self.request("clients/setactiveclient", body: data, use_json: true) {
+            (_, _, r, _) in self.verifyResponseOK(r as! NSData); cb?()
         }
-//        res = json.loads(res.body.decode())
-//        res_status = res['response_header']['status']
-//        if res_status != 'OK':
-//            raise exceptions.NetworkError('Unexpected status: {}'
-//                                          .format(res_status))
     }
     //
     //    ###########################################################################
@@ -507,27 +517,19 @@ class Client : ChannelDelegate {
     //        if res_status != 'OK':
     //            raise exceptions.NetworkError('Unexpected status: {}'
     //                                          .format(res_status))
-    //
-    //    @asyncio.coroutine
-    //    def settyping(self, conversation_id, typing=schemas.TypingStatus.TYPING):
-    //        """Send typing notification.
-    //
-    //        conversation_id must be a valid conversation ID.
-    //        typing must be a hangups.TypingStatus Enum.
-    //
-    //        Raises hangups.NetworkError if the request fails.
-    //        """
-    //        res = yield from self._request('conversations/settyping', [
-    //            self._get_request_header(),
-    //            [conversation_id],
-    //            typing.value
-    //        ])
-    //        res = json.loads(res.body.decode())
-    //        res_status = res['response_header']['status']
-    //        if res_status != 'OK':
-    //            raise exceptions.NetworkError('Unexpected status: {}'
-    //                                          .format(res_status))
-    //
+
+    func setTyping(conversation_id: String, typing: TypingStatus = TypingStatus.TYPING, cb: (() -> Void)? = nil) {
+        // Send typing notification.
+        let data = [
+            self.getRequestHeader(),
+            [conversation_id],
+            typing.representation
+        ]
+        self.request("conversations/settyping", body: data) {
+            (_, _, r, _) in self.verifyResponseOK(r as! NSData); cb?()
+        }
+    }
+
     //    @asyncio.coroutine
     //    def updatewatermark(self, conv_id, read_timestamp):
     //        """Update the watermark (read timestamp) for a conversation.
@@ -707,30 +709,22 @@ class Client : ChannelDelegate {
     //        res = yield from self._request('conversations/syncrecentconversations',
     //                                       [self._get_request_header()])
     //        return json.loads(res.body.decode())
-    //
-    //    @asyncio.coroutine
-    //    def setchatname(self, conversation_id, name):
-    //        """Set the name of a conversation.
-    //
-    //        Raises hangups.NetworkError if the request fails.
-    //        """
-    //        client_generated_id = random.randint(0, 2 ** 32)
-    //        body = [
-    //            self._get_request_header(),
-    //            None,
-    //            name,
-    //            None,
-    //            [[conversation_id], client_generated_id, 1]
-    //        ]
-    //        res = yield from self._request('conversations/renameconversation',
-    //                                       body)
-    //        res = json.loads(res.body.decode())
-    //        res_status = res['response_header']['status']
-    //        if res_status != 'OK':
-    //            logger.warning('renameconversation returned status {}'
-    //                           .format(res_status))
-    //            raise exceptions.NetworkError()
-    //
+
+    func setChatName(conversation_id: String, name: String, cb: (() -> Void)? = nil) {
+        // Set the name of a conversation.
+        let client_generated_id = Int(arc4random_uniform(4294967295))
+        let data = [
+            self.getRequestHeader(),
+            NSNull(),
+            name,
+            NSNull(),
+            [[conversation_id], client_generated_id, 1]
+        ]
+        self.request("conversations/renameconversation", body: data) {
+            (_, _, r, _) in self.verifyResponseOK(r as! NSData); cb?()
+        }
+    }
+
     //    @asyncio.coroutine
     //    def sendeasteregg(self, conversation_id, easteregg):
     //        """Send a easteregg to a conversation.

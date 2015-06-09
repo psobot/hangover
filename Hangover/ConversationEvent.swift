@@ -8,7 +8,20 @@
 
 import Foundation
 
-typealias UserID = (chat_id: String, gaia_id: String)
+struct UserID : Hashable {
+    let chat_id: String
+    let gaia_id: String
+
+    var hashValue: Int {
+        get {
+            return chat_id.hashValue + gaia_id.hashValue
+        }
+    }
+}
+
+func ==(lhs: UserID, rhs: UserID) -> Bool {
+    return lhs.hashValue == rhs.hashValue
+}
 
 class ConversationEvent {
     // An event which becomes part of the permanent record of a conversation.
@@ -37,17 +50,17 @@ class ConversationEvent {
         }
     }
 
-    var conversation_id: NSString? {
+    var conversation_id: NSString {
         get {
             // The ID of the conversation the event belongs to.
-            return self.event.conversation_id.id_
+            return self.event.conversation_id.id
         }
     }
 
-    var id: NSString? {
+    var id: Conversation.EventID {
         get {
             // The ID of the ConversationEvent.
-            return self.event.event_id
+            return self.event.event_id! as Conversation.EventID
         }
     }
 }

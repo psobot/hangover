@@ -52,7 +52,7 @@ class User {
 
     }
 
-    convenience init(conv_part_data: CLIENT_CONVERSATION.PARTICIPANT_DATA, self_user_id: UserID?) {
+    convenience init(conv_part_data: CLIENT_CONVERSATION_PARTICIPANT_DATA, self_user_id: UserID?) {
         // Initialize from ClientConversationParticipantData.
         // If self_user_id is nil, assume this is the self user.
         let user_id = UserID(chat_id: conv_part_data.id.chat_id as String, gaia_id: conv_part_data.id.gaia_id as String)
@@ -82,7 +82,7 @@ class UserList : NSObject {
     private let self_user: User
     private var user_dict: [UserID : User]
 
-    init(client: Client, self_entity: CLIENT_ENTITY, entities: [CLIENT_ENTITY], conv_parts: [CLIENT_CONVERSATION.PARTICIPANT_DATA]) {
+    init(client: Client, self_entity: CLIENT_ENTITY, entities: [CLIENT_ENTITY], conv_parts: [CLIENT_CONVERSATION_PARTICIPANT_DATA]) {
         // Initialize the list of Users.
         // Creates users from the given ClientEntity and
         // ClientConversationParticipantData instances. The latter is used only as
@@ -139,7 +139,7 @@ class UserList : NSObject {
         return Array(self.user_dict.values)
     }
 
-    func add_user_from_conv_part(conv_part: CLIENT_CONVERSATION.PARTICIPANT_DATA) -> User {
+    func add_user_from_conv_part(conv_part: CLIENT_CONVERSATION_PARTICIPANT_DATA) -> User {
         // Add new User from ClientConversationParticipantData
         let user = User(conv_part_data: conv_part, self_user_id: self.self_user.id)
         if self.user_dict[user.id] == nil {

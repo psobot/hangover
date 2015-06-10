@@ -27,6 +27,11 @@ func ==(lhs: Enum, rhs: Enum) -> Bool {
     return lhs.representation == rhs.representation
 }
 
+// For pattern matching:
+func ~=(pattern: Enum, predicate: Enum) -> Bool {
+    return pattern == predicate
+}
+
 /*
  * Enums
  */
@@ -135,64 +140,61 @@ class CLIENT_SET_FOCUS_NOTIFICATION : Message {
     var device: FocusDevice?
 }
 
+class CLIENT_CONVERSATION_READ_STATE : Message {
+    var participant_id = USER_ID()
+    var latest_read_timestamp: NSNumber = 0 // TODO: Verify this is an NSNumber
+}
+
+class CLIENT_CONVERSATION_INTERNAL_STATE : Message {
+    var field1: OptionalField = nil
+    var field2: OptionalField = nil
+    var field3: OptionalField = nil
+    var field4: OptionalField = nil
+    var field5: OptionalField = nil
+    var field6: OptionalField = nil
+
+    var self_read_state = CLIENT_CONVERSATION_READ_STATE()
+
+    var status: ClientConversationStatus = 0
+    var notification_level: ClientNotificationLevel = 0
+
+    var view = [ClientConversationView]()
+
+    var inviter_id = USER_ID()
+    var invite_timestamp: NSString = ""
+    var sort_timestamp: NSString?
+    var active_timestamp: NSString?
+
+    var field7: OptionalField = nil
+    var field8: OptionalField = nil
+    var field9: OptionalField = nil
+    var field10: OptionalField = nil
+}
+
+class CLIENT_CONVERSATION_PARTICIPANT_DATA : Message {
+    var id = USER_ID()
+    var fallback_name: NSString?
+    var field: OptionalField = nil
+}
+
 class CLIENT_CONVERSATION : Message {
     var conversation_id: CONVERSATION_ID?
     var type = ConversationType()
     var name: NSString?
 
-    class STATE : Message {
-        var field1: OptionalField = nil
-        var field2: OptionalField = nil
-        var field3: OptionalField = nil
-        var field4: OptionalField = nil
-        var field5: OptionalField = nil
-        var field6: OptionalField = nil
-
-        class READ_STATE : Message {
-            var participant_id = USER_ID()
-            var latest_read_timestamp: NSNumber = 0 // TODO: Verify this is an NSNumber
-        }
-        var self_read_state = READ_STATE()
-
-        var status: ClientConversationStatus = 0
-        var notification_level: ClientNotificationLevel = 0
-
-        var view = [ClientConversationView]()
-
-        var inviter_id = USER_ID()
-        var invite_timestamp: NSString = ""
-        var sort_timestamp: NSString?
-        var active_timestamp: NSString?
-
-        var field7: OptionalField = nil
-        var field8: OptionalField = nil
-        var field9: OptionalField = nil
-        var field10: OptionalField = nil
-    }
-
-    var self_conversation_state = STATE()
+    var self_conversation_state = CLIENT_CONVERSATION_INTERNAL_STATE()
     var field1: OptionalField = nil
     var field2: OptionalField = nil
     var field3: OptionalField = nil
 
-    class READ_STATE : Message {
-        var participant_id = USER_ID()
-        var last_read_timestamp: NSString = ""
-    }
-
-    var read_state = [READ_STATE]()
+    var read_state = [CLIENT_CONVERSATION_READ_STATE]()
     var field4: OptionalField = nil
     var otr_status: OffTheRecordStatus = 0
     var field5: OptionalField = nil
     var field6: OptionalField = nil
     var current_participant = [USER_ID]()
 
-    class PARTICIPANT_DATA : Message {
-        var id = USER_ID()
-        var fallback_name: NSString?
-        var field: OptionalField = nil
-    }
-    var participant_data = [PARTICIPANT_DATA]()
+    var participant_data = [CLIENT_CONVERSATION_PARTICIPANT_DATA]()
 
     var field7: OptionalField = nil
     var field8: OptionalField = nil
@@ -201,42 +203,49 @@ class CLIENT_CONVERSATION : Message {
     var field11: OptionalField = nil
 }
 
+//  Unfortunately, some of PBLite's introspection
+//  uses string-based class lookup, and nested
+//  classes have mangled names. So, we need to use
+//  only non-nested classes here.
+class MESSAGE_SEGMENT_FORMATTING : Message {
+    var bold: NSNumber?
+    var italic: NSNumber?
+    var strikethrough: NSNumber?
+    var underline: NSNumber?
+}
+
+class MESSAGE_SEGMENT_LINK_DATA : Message {
+    var link_target: NSString?
+}
+
 class MESSAGE_SEGMENT : Message {
     var type_: SegmentType = 0
     var text: NSString?
 
-    class FORMATTING : Message {
-        var bold: NSNumber?
-        var italic: NSNumber?
-        var strikethrough: NSNumber?
-        var underline: NSNumber?
-    }
-    var formatting: FORMATTING? = FORMATTING()
+    var formatting: MESSAGE_SEGMENT_FORMATTING? = MESSAGE_SEGMENT_FORMATTING()
 
-    class LINK_DATA : Message {
-        var link_target: NSString?
-    }
-    var link_data: LINK_DATA? = LINK_DATA()
+    var link_data: MESSAGE_SEGMENT_LINK_DATA? = MESSAGE_SEGMENT_LINK_DATA()
+}
+
+class MESSAGE_ATTACHMENT_EMBED_ITEM : Message {
+    var type_ = NSArray()
+    var data = NSDictionary()
 }
 
 class MESSAGE_ATTACHMENT : Message {
-    class EMBED_ITEM : Message {
-        var type_ = NSArray()
-        var data = NSDictionary()
-    }
-    var embed_item = EMBED_ITEM()
+    var embed_item = MESSAGE_ATTACHMENT_EMBED_ITEM()
+}
+
+class CLIENT_CHAT_MESSAGE_CONTENT : Message {
+    var segment: [MESSAGE_SEGMENT]?
+    var attachment: [MESSAGE_ATTACHMENT]?
 }
 
 class CLIENT_CHAT_MESSAGE : Message {
     var field1: OptionalField = nil
     var annotation: NSArray?
 
-    class CONTENT : Message {
-        var segment: [MESSAGE_SEGMENT]?
-        var attachment: [MESSAGE_ATTACHMENT]?
-    }
-
-    var message_content = CONTENT()
+    var message_content = CLIENT_CHAT_MESSAGE_CONTENT()
 }
 
 class CLIENT_CONVERSATION_RENAME : Message {
@@ -268,17 +277,17 @@ class CLIENT_MEMBERSHIP_CHANGE : Message {
     var field2: OptionalField = nil
 }
 
+class CLIENT_EVENT_STATE : Message {
+    var user_id = USER_ID()
+    var client_generated_id: OptionalField = nil
+    var notification_level: ClientNotificationLevel = 0
+}
+
 class CLIENT_EVENT : Message {
     var conversation_id = CONVERSATION_ID()
     var sender_id: USER_ID?
     var timestamp: NSNumber = 0
-
-    class EVENT_STATE : Message {
-        var user_id = USER_ID()
-        var client_generated_id: OptionalField = nil
-        var notification_level: ClientNotificationLevel = 0
-    }
-    var self_event_state : EVENT_STATE?
+    var self_event_state : CLIENT_EVENT_STATE?
     var field1: OptionalField = nil
     var field2: OptionalField = nil
     var chat_message: CLIENT_CHAT_MESSAGE?
@@ -353,6 +362,14 @@ class CLIENT_CONVERSATION_STATE : Message {
     var field3: OptionalField = nil
 }
 
+class CLIENT_ENTITY_PROPERTIES : Message {
+    var type_: NSNumber?
+    var display_name: NSString?
+    var first_name: NSString?
+    var photo_url: NSString?
+    var emails = NSArray()
+}
+
 class CLIENT_ENTITY : Message {
     var field1: OptionalField = nil
     var field2: OptionalField = nil
@@ -364,27 +381,19 @@ class CLIENT_ENTITY : Message {
     var field8: OptionalField = nil
     var id = USER_ID()
 
-    class PROPERTIES : Message {
-        var type_: NSNumber?
-        var display_name: NSString?
-        var first_name: NSString?
-        var photo_url: NSString?
-        var emails = NSArray()
-    }
+    var properties = CLIENT_ENTITY_PROPERTIES()
+}
 
-    var properties = PROPERTIES()
+class ENTITY_GROUP_ENTITY : Message {
+    var entity = CLIENT_ENTITY()
+    var field1: OptionalField = nil
 }
 
 class ENTITY_GROUP : Message {
     var field1: OptionalField = nil
     var some_sort_of_id: OptionalField = nil
 
-    class ENTITY : Message {
-        var entity = CLIENT_ENTITY()
-        var field1: OptionalField = nil
-    }
-
-    var entity = [ENTITY]()
+    var entity = [ENTITY_GROUP_ENTITY]()
 }
 
 class INITIAL_CLIENT_ENTITIES : Message {

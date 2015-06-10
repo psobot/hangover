@@ -23,7 +23,7 @@ func ==(lhs: UserID, rhs: UserID) -> Bool {
     return lhs.hashValue == rhs.hashValue
 }
 
-class ConversationEvent {
+class ConversationEvent : Equatable {
     // An event which becomes part of the permanent record of a conversation.
     // This corresponds to ClientEvent in the API.
     // This is the base class for such events.
@@ -63,6 +63,10 @@ class ConversationEvent {
             return self.event.event_id! as Conversation.EventID
         }
     }
+}
+
+func ==(lhs: ConversationEvent, rhs: ConversationEvent) -> Bool {
+    return lhs.event == rhs.event
 }
 
 class ChatMessageSegment {
@@ -142,14 +146,15 @@ class ChatMessageEvent : ConversationEvent {
             // A textual representation of the message.
             var lines = [""]
             for segment in self.segments {
-                if segment.type == SegmentType.TEXT {
-                    lines[-1] += segment.text
-                } else if segment.type == SegmentType.LINK {
-                    lines[-1] += segment.text
-                } else if segment.type == SegmentType.LINE_BREAK {
+                switch (segment.type) {
+                case SegmentType.TEXT, SegmentType.LINK:
+                    let replacement = lines.last! + segment.text
+                    lines.removeLast()
+                    lines.append(replacement)
+                case SegmentType.LINE_BREAK:
                     lines.append("")
-                } else {
-                    print("Ignoring unknown chat message segment type: \(segment.type)")
+                default:
+                    print("Ignoring unknown chat message segment type: \(segment.type.representation)")
                 }
             }
             lines += self.attachments

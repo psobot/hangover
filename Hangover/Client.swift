@@ -603,44 +603,39 @@ class Client : ChannelDelegate {
         }
     }
 
-    //    @asyncio.coroutine
-    //    def getconversation(self, conversation_id, event_timestamp, max_events=50):
-    //        """Return conversation events.
-    //
-    //        This is mainly used for retrieving conversation scrollback. Events
-    //        occurring before event_timestamp are returned, in order from oldest to
-    //        newest.
-    //
-    //        Raises hangups.NetworkError if the request fails.
-    //        """
-    //        self.request('conversations/getconversation', [
-    //            self.getRequestHeader(),
-    //            [[conversation_id], [], []],  # conversationSpec
-    //            False,  # includeConversationMetadata
-    //            True,  # includeEvents
-    //            nil,  # ???
-    //            max_events,  # maxEventsPerConversation
-    //            # eventContinuationToken (specifying timestamp is sufficient)
-    //            [
-    //                nil,  # eventId
-    //                nil,  # storageContinuationToken
-    //                parsers.to_timestamp(event_timestamp),  # eventTimestamp
-    //            ]
-    //        ], use_json=False)
-    //        try:
-    //            res = schemas.CLIENT_GET_CONVERSATION_RESPONSE.parse(
-    //                javascript.loads(res.body.decode())
-    //            )
-    //        except ValueError as e:
-    //            raise exceptions.NetworkError('Response failed to parse: {}'
-    //                                          .format(e))
-    //        # can return 200 but still contain an error
-    //        status = res.response_header.status
-    //        if status != 1:
-    //            raise exceptions.NetworkError('Response status is \'{}\''
-    //                                          .format(status))
-    //        return res
-    //
+    func getConversation(
+        conversation_id: String,
+        event_timestamp: NSDate,
+        max_events: Int = 50,
+        cb: (CLIENT_GET_CONVERSATION_RESPONSE) -> Void
+    ) {
+        //    Return conversation events.
+        //
+        //    This is mainly used for retrieving conversation scrollback. Events
+        //    occurring before event_timestamp are returned, in order from oldest to
+        //    newest.
+
+        self.request("conversations/getconversation", body: [
+            self.getRequestHeader(),
+            [[conversation_id], [], []],  // conversationSpec
+            false,  // includeConversationMetadata
+            true,  // includeEvents
+            NSNull(),  // ???
+            max_events,  // maxEventsPerConversation
+            // eventContinuationToken (specifying timestamp is sufficient)
+            [
+                NSNull(),  // eventId
+                NSNull(),  // storageContinuationToken
+                to_timestamp(event_timestamp),  // eventTimestamp
+            ]
+        ], use_json: false) {
+            (_, _, responseObject, _) -> Void in
+            //  TODO: Undo the sins done here
+            let result = JSContext().evaluateScript("a = " + (NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String)).toArray()
+            cb(CLIENT_GET_CONVERSATION_RESPONSE.parse(result)!)
+        }
+    }
+
     //    @asyncio.coroutine
     //    def syncrecentconversations(self):
     //        """List the contents of recent conversations, including messages.
@@ -757,6 +752,6 @@ typealias InitialData = (
     conversation_states: [CLIENT_CONVERSATION_STATE],
     self_entity: CLIENT_ENTITY,
     entities: [CLIENT_ENTITY],
-    conversation_participants: [CLIENT_CONVERSATION.PARTICIPANT_DATA],
+    conversation_participants: [CLIENT_CONVERSATION_PARTICIPANT_DATA],
     sync_timestamp: NSDate
 )

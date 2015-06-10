@@ -12,6 +12,8 @@ protocol ConversationDelegate {
     func conversation(conversation: Conversation, didChangeTypingStatusTo: TypingStatus)
     func conversation(conversation: Conversation, didReceiveEvent: ConversationEvent)
     func conversation(conversation: Conversation, didReceiveWatermarkNotification: WatermarkNotification)
+
+    func conversationDidUpdateEvents(conversation: Conversation)
 }
 
 class Conversation {
@@ -194,60 +196,66 @@ class Conversation {
         }
     }
 
-//    func get_events(event_id=nil, max_events=50, cb: (() -> Void)?) {
-//        // Return list of ConversationEvents ordered newest-first.
-//        // If event_id is specified, return events preceeding this event.
-//        // This method will make an API request to load historical events if
-//        // necessary. If the beginning of the conversation is reached, an empty
-//        // list will be returned.
+    func getEvents(event_id: String? = nil, max_events: Int = 50, cb: (([ConversationEvent]) -> Void)? = nil) {
+        // Return list of ConversationEvents ordered newest-first.
+        // If event_id is specified, return events preceeding this event.
+        // This method will make an API request to load historical events if
+        // necessary. If the beginning of the conversation is reached, an empty
+        // list will be returned.
+
+        guard let event_id = event_id else {
+            cb?(events)
+            return
+        }
+
+        // If event_id is provided, return the events we have that are
+        // older, or request older events if event_id corresponds to the
+        // oldest event we have.
+        if let conv_event = self.get_event(event_id) {
+            if events.first!.id != event_id {
+                if let indexOfEvent = self.events.indexOf({ $0 == conv_event }) {
+                    cb?(Array(self.events[indexOfEvent...self.events.endIndex]))
+                    return
+                }
+            }
+            print("Loading events for conversation \(id) before \(conv_event.timestamp)")
+            client.getConversation(id, event_timestamp: conv_event.timestamp, max_events: max_events) { res in
+                let conv_events = res.conversation_state.event.map { Conversation.wrap_event($0) }
+                print("Loaded \(conv_events.count) events for conversation \(self.id)")
+
+                for conv_event in conv_events {
+                    self.events.insert(conv_event, atIndex: 0)
+                    self.events_dict[conv_event.id] = conv_event
+                }
+                cb?(conv_events)
+                self.delegate?.conversationDidUpdateEvents(self)
+            }
+        } else {
+            //  TODO: Handle this error somehow.
+            print("Event not found.")
+        }
+    }
+
+//    func next_event(event_id, prev=False) {
+//        // Return ConversationEvent following the event with given event_id.
+//        // If prev is True, return the previous event rather than the following
+//        // one.
+//        // Raises KeyError if no such ConversationEvent is known.
+//        // Return nil if there is no following event.
 //
-//        if event_id is nil:
-//        # If no event_id is provided, return the newest events in this
-//        # conversation.
-//        conv_events = self._events[-1 * max_events:]
-//        else:
-//        # If event_id is provided, return the events we have that are
-//        # older, or request older events if event_id corresponds to the
-//        # oldest event we have.
-//        conv_event = self.get_event(event_id)
-//        if self._events[0].id_ != event_id:
-//        conv_events = self._events[self._events.index(conv_event) + 1:]
-//        else:
-//        logger.info('Loading events for conversation {} before {}'
-//        .format(self.id_, conv_event.timestamp))
-//        res = yield from self.client.getconversation(
-//        self.id_, conv_event.timestamp, max_events
-//        )
-//        conv_events = [self._wrap_event(client_event) for client_event
-//        in res.conversation_state.event]
-//        logger.info('Loaded {} events for conversation {}'
-//            .format(len(conv_events), self.id_))
-//        for conv_event in reversed(conv_events) {
-//            self._events.insert(0, conv_event)
-//            self._events_dict[conv_event.id_] = conv_event
-//            return conv_events
+//        i = self.events.index(self._events_dict[event_id])
+//        if prev and i > 0:
+//        return self.events[i - 1]
+//        elif not prev and i + 1 < len(self.events) {
+//            return self.events[i + 1]
+//            else:
+//            return nil
 //        }
-//
-//        func next_event(event_id, prev=False) {
-//            // Return ConversationEvent following the event with given event_id.
-//            // If prev is True, return the previous event rather than the following
-//            // one.
-//            // Raises KeyError if no such ConversationEvent is known.
-//            // Return nil if there is no following event.
-//
-//            i = self.events.index(self._events_dict[event_id])
-//            if prev and i > 0:
-//            return self.events[i - 1]
-//            elif not prev and i + 1 < len(self.events) {
-//                return self.events[i + 1]
-//                else:
-//                return nil
-//            }
-//        }
-//
-//        func get_event(event_id: EventID) -> ConversationEvent {
-//            return events_dict[event_id]
-//        }
+//    }
+
+    func get_event(event_id: EventID) -> ConversationEvent? {
+        return events_dict[event_id]
+    }
 
     var id: String {
         get {

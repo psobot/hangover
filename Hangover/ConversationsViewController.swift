@@ -93,6 +93,9 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
             let storyboard = NSStoryboard(name:"Main", bundle:nil)
 
             conversationWindowController = storyboard.instantiateControllerWithIdentifier("ConversationWindowController") as? NSWindowController
+            if let conversationViewController = conversationWindowController?.contentViewController as? ConversationViewController {
+                conversationViewController.representedObject = conversation
+            }
             conversationWindowController?.showWindow(nil)
 
         } else {

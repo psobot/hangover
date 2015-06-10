@@ -18,6 +18,10 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         conversationTableView.setDataSource(self)
     }
 
+    override func viewWillAppear() {
+        self.conversation?.getEvents(conversation?.events.first?.id, max_events: 50)
+    }
+
     override var representedObject: AnyObject? {
         didSet {
             self.conversation?.delegate = self
@@ -30,7 +34,7 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         }
     }
 
-    // client delegate
+    // conversation delegate
     func conversation(conversation: Conversation, didChangeTypingStatusTo: TypingStatus) {
 
     }
@@ -41,6 +45,10 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
 
     func conversation(conversation: Conversation, didReceiveWatermarkNotification: WatermarkNotification) {
 
+    }
+
+    func conversationDidUpdateEvents(conversation: Conversation) {
+        conversationTableView.reloadData()
     }
 
     // NSTableViewDataSource delegate

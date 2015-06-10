@@ -28,10 +28,25 @@ typealias OptionalField = AnyObject?
 
 func unwrapOptionalType(any: Any) -> Any.Type? {
     //  This is super nasty, but works. (Doesn't work in Playground, because of lldb name mangling.)
+    //  Also doesn't work for nested classes. Boo.
 
     let dynamicTypeName = "\(reflect(any).valueType)"
     let containedTypeName = dynamicTypeName.stringByReplacingOccurrencesOfString("Swift.Optional<", withString: "").stringByReplacingOccurrencesOfString(">", withString: "")
     return NSClassFromString(containedTypeName)
+}
+
+func unwrapOptionalArrayType(any: Any) -> Any.Type? {
+    // blehhhh
+    // don't look at me
+    // I'm hideous
+
+    let dynamicTypeName = "\(reflect(any).valueType)"
+    if dynamicTypeName.contains("Swift.Optional<Swift.Array") {
+        let containedTypeName = dynamicTypeName.stringByReplacingOccurrencesOfString("Swift.Optional<", withString: "").stringByReplacingOccurrencesOfString("Swift.Array<", withString: "").stringByReplacingOccurrencesOfString(">", withString: "")
+        return NSClassFromString(containedTypeName)
+    } else {
+        return nil
+    }
 }
 
 func unwrapArray(any:Any) -> Any? {
@@ -52,9 +67,9 @@ func getArrayMessageType(arr: Any) -> Message.Type? {
     if arr is [CLIENT_ENTITY] { return CLIENT_ENTITY.self }
     if arr is [MESSAGE_SEGMENT] { return MESSAGE_SEGMENT.self }
     if arr is [MESSAGE_ATTACHMENT] { return MESSAGE_ATTACHMENT.self }
-    if arr is [CLIENT_CONVERSATION.PARTICIPANT_DATA] { return CLIENT_CONVERSATION.PARTICIPANT_DATA.self }
-    if arr is [CLIENT_CONVERSATION.STATE.READ_STATE] { return CLIENT_CONVERSATION.STATE.READ_STATE.self }
-    if arr is [ENTITY_GROUP.ENTITY] { return ENTITY_GROUP.ENTITY.self }
+    if arr is [CLIENT_CONVERSATION_PARTICIPANT_DATA] { return CLIENT_CONVERSATION_PARTICIPANT_DATA.self }
+    if arr is [CLIENT_CONVERSATION_READ_STATE] { return CLIENT_CONVERSATION_READ_STATE.self }
+    if arr is [ENTITY_GROUP_ENTITY] { return ENTITY_GROUP_ENTITY.self }
 
     // ... etc, one for each different kind of array we might have.
     // This is horrible, but if we can find a function that'll take
@@ -111,7 +126,11 @@ class Message : NSObject {
                     if arr[i] is NSNull {
                         instance.setValue(nil, forKey: propertyName)
                     } else {
-                        if let elementType = getArrayMessageType(property) {
+                        if let elementType = unwrapOptionalArrayType(property) {
+                            let elementMessageType = elementType as! Message.Type
+                            let val = (arr[i] as! NSArray).map { elementMessageType.parse($0 as? NSArray)! }
+                            instance.setValue(val, forKey:propertyName)
+                        } else if let elementType = getArrayMessageType(property) {
                             let val = (arr[i] as! NSArray).map { elementType.parse($0 as? NSArray)! }
                             instance.setValue(val, forKey:propertyName)
                         } else if let elementType = getArrayEnumType(property) {

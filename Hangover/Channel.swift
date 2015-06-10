@@ -225,7 +225,7 @@ class Channel : NSObject, NSURLSessionDataDelegate {
 
         // This method is only called when the long-polling request was
         // successful, so use it to trigger connection events if necessary.
-        if isConnected {
+        if !isConnected {
             if onConnectCalled {
                 isConnected = true
                 delegate?.channelDidReconnect(self)

@@ -14,7 +14,7 @@ struct UserID : Hashable {
 
     var hashValue: Int {
         get {
-            return chat_id.hashValue + gaia_id.hashValue
+            return chat_id.hashValue ^ gaia_id.hashValue
         }
     }
 }

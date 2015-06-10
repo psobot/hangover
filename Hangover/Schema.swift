@@ -123,7 +123,7 @@ class USER_ID : Message {
 class CLIENT_SET_TYPING_NOTIFICATION : Message {
     var conversation_id = CONVERSATION_ID()
     var user_id = USER_ID()
-    var timestamp: NSString = ""
+    var timestamp: NSNumber = 0
     var status: TypingStatus = 0
 }
 
@@ -301,7 +301,7 @@ class CLIENT_EVENT_NOTIFICATION : Message {
 class CLIENT_WATERMARK_NOTIFICATION : Message {
     var participant_id = USER_ID()
     var conversation_id = CONVERSATION_ID()
-    var latest_read_timestamp: NSString = ""
+    var latest_read_timestamp: NSNumber = 0
 }
 
 class CLIENT_STATE_UPDATE_HEADER : Message {
@@ -320,7 +320,7 @@ class CLIENT_STATE_UPDATE : Message {
     var conversation_notification: OptionalField = nil
     var event_notification: CLIENT_EVENT_NOTIFICATION?
     var focus_notification = CLIENT_SET_FOCUS_NOTIFICATION()
-    var typing_notification = CLIENT_SET_TYPING_NOTIFICATION()
+    var typing_notification: CLIENT_SET_TYPING_NOTIFICATION?
     var notification_level_notification: OptionalField = nil
     var reply_to_invite_notification: OptionalField = nil
     var watermark_notification: CLIENT_WATERMARK_NOTIFICATION?

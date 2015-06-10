@@ -14,7 +14,7 @@
 		3320A6EE1B25410B00F83B81 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3320A6ED1B25410B00F83B81 /* Conversation.swift */; };
 		3320A6EF1B25410B00F83B81 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3320A6ED1B25410B00F83B81 /* Conversation.swift */; };
 		33368DBC1B12ACD4009B28B2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DBB1B12ACD4009B28B2 /* AppDelegate.swift */; };
-		33368DBE1B12ACD4009B28B2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DBD1B12ACD4009B28B2 /* ViewController.swift */; };
+		33368DBE1B12ACD4009B28B2 /* ConversationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DBD1B12ACD4009B28B2 /* ConversationsViewController.swift */; };
 		33368DC01B12ACD4009B28B2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33368DBF1B12ACD4009B28B2 /* Images.xcassets */; };
 		33368DC31B12ACD4009B28B2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 33368DC11B12ACD4009B28B2 /* Main.storyboard */; };
 		33368DCF1B12ACD4009B28B2 /* HangoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33368DCE1B12ACD4009B28B2 /* HangoverTests.swift */; };
@@ -47,6 +47,8 @@
 		339576C11B269E7200D1E555 /* Power.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576BF1B269E6D00D1E555 /* Power.swift */; };
 		339576C31B26A47F00D1E555 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 339576C21B26A47F00D1E555 /* Data */; };
 		339576C41B26A52800D1E555 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 339576C21B26A47F00D1E555 /* Data */; };
+		339576C61B27BE3F00D1E555 /* ConversationList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576C51B27BE3F00D1E555 /* ConversationList.swift */; };
+		339576CA1B27DE0E00D1E555 /* ConversationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576C91B27DE0E00D1E555 /* ConversationViewController.swift */; };
 		33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */; };
 		33E9F5C41B1A2CFE0027F7EC /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5C31B1A2CFE0027F7EC /* Regex.swift */; };
 		33E9F5C51B1A37770027F7EC /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5B1B153E5200C81DC3 /* Channel.swift */; };
@@ -72,7 +74,7 @@
 		33368DB61B12ACD4009B28B2 /* Hangover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hangover.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		33368DBA1B12ACD4009B28B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		33368DBB1B12ACD4009B28B2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		33368DBD1B12ACD4009B28B2 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		33368DBD1B12ACD4009B28B2 /* ConversationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsViewController.swift; sourceTree = "<group>"; };
 		33368DBF1B12ACD4009B28B2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		33368DC21B12ACD4009B28B2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		33368DC81B12ACD4009B28B2 /* HangoverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HangoverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +97,8 @@
 		339576B81B2679EF00D1E555 /* TupleComparison.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TupleComparison.swift; sourceTree = "<group>"; };
 		339576BF1B269E6D00D1E555 /* Power.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Power.swift; sourceTree = "<group>"; };
 		339576C21B26A47F00D1E555 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
+		339576C51B27BE3F00D1E555 /* ConversationList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationList.swift; sourceTree = "<group>"; };
+		339576C91B27DE0E00D1E555 /* ConversationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationViewController.swift; sourceTree = "<group>"; };
 		33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Extensions.swift"; sourceTree = "<group>"; };
 		33E9F5BF1B1A1D9F0027F7EC /* Hangover-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Hangover-Bridging-Header.h"; sourceTree = "<group>"; };
 		33E9F5C31B1A2CFE0027F7EC /* Regex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
@@ -147,11 +151,13 @@
 			isa = PBXGroup;
 			children = (
 				33368DBB1B12ACD4009B28B2 /* AppDelegate.swift */,
-				33368DBD1B12ACD4009B28B2 /* ViewController.swift */,
+				33368DBD1B12ACD4009B28B2 /* ConversationsViewController.swift */,
+				339576C91B27DE0E00D1E555 /* ConversationViewController.swift */,
 				33368DD81B12B545009B28B2 /* PBLite.swift */,
 				33405A6E1B1E6EB800C81DC3 /* Schema.swift */,
 				33368DDB1B15393D009B28B2 /* Client.swift */,
 				3320A6ED1B25410B00F83B81 /* Conversation.swift */,
+				339576C51B27BE3F00D1E555 /* ConversationList.swift */,
 				339576B41B26668D00D1E555 /* ConversationEvent.swift */,
 				33405A5B1B153E5200C81DC3 /* Channel.swift */,
 				33405A5F1B1C0B0800C81DC3 /* Manager.swift */,
@@ -426,7 +432,8 @@
 				33405A6F1B1E6EB800C81DC3 /* Schema.swift in Sources */,
 				33806E271B1A6875007C6BE4 /* NSString+SHA1.m in Sources */,
 				3320A6E91B21576800F83B81 /* Parsers.swift in Sources */,
-				33368DBE1B12ACD4009B28B2 /* ViewController.swift in Sources */,
+				339576C61B27BE3F00D1E555 /* ConversationList.swift in Sources */,
+				33368DBE1B12ACD4009B28B2 /* ConversationsViewController.swift in Sources */,
 				33405A5C1B153E5200C81DC3 /* Channel.swift in Sources */,
 				33368DBC1B12ACD4009B28B2 /* AppDelegate.swift in Sources */,
 				339576C01B269E6D00D1E555 /* Power.swift in Sources */,
@@ -441,6 +448,7 @@
 				339576B71B26768700D1E555 /* User.swift in Sources */,
 				33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */,
 				3389838A1B201263009BB5BC /* Dictionary+Swifter.swift in Sources */,
+				339576CA1B27DE0E00D1E555 /* ConversationViewController.swift in Sources */,
 				33405A661B1D3D6C00C81DC3 /* LoginViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

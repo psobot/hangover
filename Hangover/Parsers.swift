@@ -84,34 +84,32 @@ func to_timestamp(date: NSDate) -> NSNumber {
 //
 //
 typealias TypingStatusMessage = (conv_id: String, user_id: UserID, timestamp: NSDate, status: TypingStatus)
-//
-//
-//def parse_typing_status_message(p):
-//"""Return TypingStatusMessage from ClientSetTypingNotification.
-//The same status may be sent multiple times consecutively, and when a
-//message is sent the typing status will not change to stopped.
-//"""
-//return TypingStatusMessage(
-//    conv_id=p.conversation_id.id_,
-//    user_id=user.UserID(chat_id=p.user_id.chat_id,
-//        gaia_id=p.user_id.gaia_id),
-//    timestamp=from_timestamp(p.timestamp),
-//    status=p.status,
-//)
-//
-//
+
+
+func parse_typing_status_message(p: CLIENT_SET_TYPING_NOTIFICATION) -> TypingStatusMessage {
+    //    Return TypingStatusMessage from ClientSetTypingNotification.
+    //    The same status may be sent multiple times consecutively, and when a
+    //    message is sent the typing status will not change to stopped.
+    return TypingStatusMessage(
+        conv_id: p.conversation_id.id as String,
+        user_id: UserID(chat_id: p.user_id.chat_id as String, gaia_id: p.user_id.gaia_id as String),
+        timestamp: from_timestamp(p.timestamp),
+        status: p.status
+    )
+}
+
+
 typealias WatermarkNotification = (conv_id: String, user_id: UserID, read_timestamp: NSDate)
-//
-//
-//def parse_watermark_notification(client_watermark_notification):
-//"""Return WatermarkNotification from ClientWatermarkNotification."""
-//return WatermarkNotification(
-//    conv_id=client_watermark_notification.conversation_id.id_,
-//    user_id=user.UserID(
-//        chat_id=client_watermark_notification.participant_id.chat_id,
-//        gaia_id=client_watermark_notification.participant_id.gaia_id,
-//    ),
-//    read_timestamp=from_timestamp(
-//        client_watermark_notification.latest_read_timestamp
-//    ),
-//)
+
+
+func parse_watermark_notification(client_watermark_notification: CLIENT_WATERMARK_NOTIFICATION) -> WatermarkNotification {
+    // Return WatermarkNotification from ClientWatermarkNotification.
+    return WatermarkNotification(
+        conv_id: client_watermark_notification.conversation_id.id as String,
+        user_id: UserID(
+            chat_id: client_watermark_notification.participant_id.chat_id as String,
+            gaia_id: client_watermark_notification.participant_id.gaia_id as String
+        ),
+        read_timestamp: from_timestamp(client_watermark_notification.latest_read_timestamp)
+    )
+}

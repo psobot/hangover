@@ -24,7 +24,8 @@ class Conversation {
     var conversation: CLIENT_CONVERSATION
     var events = [ConversationEvent]()
     var events_dict = Dictionary<EventID, ConversationEvent>()
-    var send_message_lock = false//asyncio.Lock()
+
+    var delegate: ConversationDelegate?
 
     init(client: Client,
         user_list: UserList,
@@ -48,22 +49,21 @@ class Conversation {
         }
     }
 
-//    func update_conversation(client_conversation) {
-//        // Update the internal ClientConversation.
-//        // When latest_read_timestamp is 0, this seems to indicate no change
-//        // from the previous value. Word around this by saving and restoring the
-//        // previous value.
-//        old_timestamp = self.latest_read_timestamp
-//        self._conversation = client_conversation
-//        if to_timestamp(self.latest_read_timestamp) == 0 {
-//            self_conversation_state = (
-//                self._conversation.self_conversation_state
-//            )
-//            self_conversation_state.self_read_state.latest_read_timestamp = (
-//                to_timestamp(old_timestamp)
-//            )
-//        }
-//    }
+    func update_conversation(client_conversation: CLIENT_CONVERSATION) {
+        // Update the internal ClientConversation.
+        // When latest_read_timestamp is 0, this seems to indicate no change
+        // from the previous value. Word around this by saving and restoring the
+        // previous value.
+
+        let old_timestamp = self.latest_read_timestamp
+        self.conversation = client_conversation
+        
+        if to_timestamp(self.latest_read_timestamp) == 0 {
+            self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = (
+                to_timestamp(old_timestamp)
+            )
+        }
+    }
 
     private class func wrap_event(event: CLIENT_EVENT) -> ConversationEvent {
         // Wrap ClientEvent in ConversationEvent subclass.
@@ -92,48 +92,58 @@ class Conversation {
         return self.user_list.get_user(user_id)
     }
 
-//    func send_message(segments, image_file=None, image_id=None, cb: (() -> Void)?) {
-//        // Send a message to this conversation.
-//
-//        // A per-conversation lock is acquired to ensure that messages are sent in
-//        // the correct order when this method is called multiple times
-//        // asynchronously.
-//
-//        // segments is a list of ChatMessageSegments to include in the message.
-//
-//        // image_file is an optional file-like object containing an image to be
-//        // attached to the message.
-//
-//        // image_id is an optional ID of an image to be attached to the message
-//        // (if you specify both image_file and image_id together, image_file
-//        // takes precedence and supplied image_id will be ignored)
-//
-//        with (yield from self._send_message_lock) {
-//            // Send messages with OTR status matching the conversation's status.
-//            otr_status = (OffTheRecordStatus.OFF_THE_RECORD
-//                if self.is_off_the_record
-//                else OffTheRecordStatus.ON_THE_RECORD)
-//            if image_file {
-//                image_id = self.client.upload_image(image_file) {
-//                    self.send_message(segments, nil, image_id, cb)
-//                }
-//                return
-//            }
-//
-//            self.client.sendchatmessage(
-//                self.id_, segments.map { $0.serialize },
-//                image_id=image_id, otr_status=otr_status, cb
-//            )
-//        }
-//
-//        func leave(cb: (() -> Void)?) {
-//            // Leave conversation.
-//            if self._conversation.type_ == ConversationType.GROUP {}
-//            self.client.removeUser(self.id_, cb)
-//        } else {
-//            self.client.deleteConversation(self.id_, cb)
-//        }
-//    }
+    func sendMessage(segments: [ChatMessageSegment],
+        image_file: String? = nil,
+        image_id: String? = nil,
+        cb: (() -> Void)? = nil
+    ) {
+        // Send a message to this conversation.
+
+        // A per-conversation lock is acquired to ensure that messages are sent in
+        // the correct order when this method is called multiple times
+        // asynchronously.
+
+        // segments is a list of ChatMessageSegments to include in the message.
+
+        // image_file is an optional file-like object containing an image to be
+        // attached to the message.
+
+        // image_id is an optional ID of an image to be attached to the message
+        // (if you specify both image_file and image_id together, image_file
+        // takes precedence and supplied image_id will be ignored)
+
+        //with (yield from self._send_message_lock) {
+        // Send messages with OTR status matching the conversation's status.
+        let otr_status = (is_off_the_record ? OffTheRecordStatus.OFF_THE_RECORD : OffTheRecordStatus.ON_THE_RECORD)
+
+        if let image_file = image_file {
+            //client.upload_image(image_file) { image_id in
+                self.sendMessage(segments, image_file: nil, image_id: image_id, cb: cb)
+            //}
+            return
+        }
+
+        client.sendChatMessage(id,
+            segments: segments.map { $0.serialize() },
+            image_id: image_id,
+            otr_status: otr_status,
+            cb: cb
+        )
+        //}
+    }
+
+    func leave(cb: (() -> Void)? = nil) {
+        switch (self.conversation.type) {
+        case ConversationType.GROUP:
+            print("Remove")
+            //client.removeUser(id, cb)
+        case ConversationType.STICKY_ONE_TO_ONE:
+            client.deleteConversation(id, cb: cb)
+        default:
+            break
+        }
+    }
+    
 
     func rename(name: String, cb: (() -> Void)?) {
         // Rename the conversation.
@@ -157,37 +167,41 @@ class Conversation {
         client.setTyping(id, typing: typing, cb: cb)
     }
 
-//    func update_read_timestamp(read_timestamp: NSDate?=nil, cb: (() -> Void)?=nil) {
-//        // Update the timestamp of the latest event which has been read.
-//        // By default, the timestamp of the newest event is used.
-//        // This method will avoid making an API request if it will have no effect.
-//
-//        if read_timestamp is None {
-//            read_timestamp = self.events[-1].timestamp
-//        }
-//
-//        if read_timestamp > self.latest_read_timestamp {
-//            logger.info(
-//                'Setting {} latest_read_timestamp from {} to {}'
-//                .format(self.id_, self.latest_read_timestamp, read_timestamp)
-//            )
-//            // Prevent duplicate requests by updating the conversation now.
-//            state = self._conversation.self_conversation_state
-//            state.self_read_state.latest_read_timestamp = (
-//                to_timestamp(read_timestamp)
-//            )
-//            self.client.updatewatermark(self.id_, read_timestamp, cb)
-//        }
-//    }
-//
-//    func get_events(event_id=None, max_events=50, cb: (() -> Void)?) {
+    func updateReadTimestamp(var read_timestamp: NSDate? = nil, cb: (() -> Void)? = nil) {
+        // Update the timestamp of the latest event which has been read.
+        // By default, the timestamp of the newest event is used.
+        // This method will avoid making an API request if it will have no effect.
+
+        if read_timestamp == nil {
+            read_timestamp = self.events[-1].timestamp
+        }
+        if let new_read_timestamp = read_timestamp {
+            if new_read_timestamp.compare(self.latest_read_timestamp) == NSComparisonResult.OrderedDescending {
+                print("Setting \(id) latest_read_timestamp from \(latest_read_timestamp) to \(read_timestamp)")
+
+                // Prevent duplicate requests by updating the conversation now.
+                let state = conversation.self_conversation_state
+                state.self_read_state.latest_read_timestamp = to_timestamp(new_read_timestamp)
+
+                client.updateWatermark(id, read_timestamp: new_read_timestamp, cb: cb)
+            }
+        }
+    }
+
+    var messages: [ChatMessageEvent] {
+        get {
+            return events.flatMap { $0 as? ChatMessageEvent }
+        }
+    }
+
+//    func get_events(event_id=nil, max_events=50, cb: (() -> Void)?) {
 //        // Return list of ConversationEvents ordered newest-first.
 //        // If event_id is specified, return events preceeding this event.
 //        // This method will make an API request to load historical events if
 //        // necessary. If the beginning of the conversation is reached, an empty
 //        // list will be returned.
 //
-//        if event_id is None:
+//        if event_id is nil:
 //        # If no event_id is provided, return the newest events in this
 //        # conversation.
 //        conv_events = self._events[-1 * max_events:]
@@ -219,7 +233,7 @@ class Conversation {
 //            // If prev is True, return the previous event rather than the following
 //            // one.
 //            // Raises KeyError if no such ConversationEvent is known.
-//            // Return None if there is no following event.
+//            // Return nil if there is no following event.
 //
 //            i = self.events.index(self._events_dict[event_id])
 //            if prev and i > 0:
@@ -227,7 +241,7 @@ class Conversation {
 //            elif not prev and i + 1 < len(self.events) {
 //                return self.events[i + 1]
 //                else:
-//                return None
+//                return nil
 //            }
 //        }
 //
@@ -253,7 +267,7 @@ class Conversation {
 //
 //        var name {
 //            get {
-//                // The conversation's custom name, or None if it doesn't have one.
+//                // The conversation's custom name, or nil if it doesn't have one.
 //                return self._conversation.name
 //            }
 //        }
@@ -266,23 +280,14 @@ class Conversation {
 //                )
 //            }
 //        }
-//
-//        var latest_read_timestamp {
-//            get {
-//                // datetime timestamp of the last read ConversationEvent.
-//                timestamp = (self._conversation.self_conversation_state.
-//                    self_read_state.latest_read_timestamp)
-//                return from_timestamp(timestamp)
-//            }
-//        }
-//
-//        var events {
-//            get {
-//                // The list of ConversationEvents, sorted oldest to newest.
-//                return list(self._events)
-//            }
-//        }
-//
+
+    var latest_read_timestamp: NSDate {
+        get {
+            // datetime timestamp of the last read ConversationEvent.
+            return from_timestamp(conversation.self_conversation_state.self_read_state.latest_read_timestamp)
+        }
+    }
+
 //        var unread_events {
 //            get {
 //                // List of ConversationEvents that are unread.
@@ -299,16 +304,15 @@ class Conversation {
 //                    if conv_event.timestamp > self.latest_read_timestamp]
 //            }
 //        }
-//
-//        var is_archived {
-//            get {
-//                // True if this conversation has been archived.
-//                return (ClientConversationView.ARCHIVED_VIEW in
-//                    self._conversation.self_conversation_state.view)
-//            }
-//        }
-//        
-//        var is_quiet { 
+
+    var is_archived: Bool {
+        get {
+            // True if this conversation has been archived.
+            return self.conversation.self_conversation_state.view.contains(ClientConversationView.ARCHIVED_VIEW)
+        }
+    }
+    
+//        var is_quiet {
 //            get {
 //                // True if notification level for this conversation is quiet.
 //                level = self._conversation.self_conversation_state.notification_level
@@ -316,11 +320,10 @@ class Conversation {
 //            }
 //        }
 //        
-//        var is_off_the_record { 
-//            get {
-//                // True if conversation is off the record (history is disabled).
-//                status = self._conversation.otr_status
-//                return status == OffTheRecordStatus.OFF_THE_RECORD
-//            }
-//        }
+    var is_off_the_record: Bool {
+        get {
+            // True if conversation is off the record (history is disabled).
+            return self.conversation.otr_status == OffTheRecordStatus.OFF_THE_RECORD
+        }
+    }
 }

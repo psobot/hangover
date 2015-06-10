@@ -75,7 +75,7 @@ class User {
 let ClientStateUpdatedNotification = "ClientStateUpdated"
 let ClientStateUpdatedNewStateKey = "ClientStateNewState"
 
-class UserList {
+class UserList : NSObject {
     // Collection of User instances.
 
     private let client: Client
@@ -91,6 +91,9 @@ class UserList {
         self.client = client
         self.self_user = User(entity: self_entity, self_user_id: nil)
         self.user_dict = [self.self_user.id: self.self_user]
+
+        super.init()
+
         // Add each entity as a new User.
         for entity in entities {
             let user = User(entity: entity, self_user_id: self.self_user.id)
@@ -146,7 +149,7 @@ class UserList {
         return user
     }
 
-    private func on_state_update_notification(notification: NSNotification) {
+    func on_state_update_notification(notification: NSNotification) {
         if let userInfo = notification.userInfo, state_update = userInfo[ClientStateUpdatedNewStateKey as NSString] {
             on_state_update(state_update as! CLIENT_STATE_UPDATE)
         }
@@ -164,5 +167,47 @@ class UserList {
         for participant in client_conversation.participant_data {
             self.add_user_from_conv_part(participant)
         }
+    }
+}
+
+func build_user_list(client: Client, initial_data: InitialData, cb: (UserList) -> Void) {
+    // Return UserList from initial contact data and an additional request.
+
+    // The initial data contains the user's contacts, but there may be conversions
+    // containing users that are not in the contacts. This function takes care of
+    // requesting data for those users and constructing the UserList.
+
+    let all_entities = initial_data.entities + [initial_data.self_entity]
+    let present_user_ids = Set(all_entities.map {
+        UserID(chat_id: $0.id.chat_id as String, gaia_id: $0.id.gaia_id as String)
+    })
+
+    var required_user_ids = Set<UserID>()
+    for conv_state in initial_data.conversation_states {
+        required_user_ids = required_user_ids.union(Set(conv_state.conversation.participant_data.map {
+            UserID(chat_id: $0.id.chat_id as String, gaia_id: $0.id.gaia_id as String)
+        }))
+    }
+
+    let missing_user_ids = required_user_ids.subtract(present_user_ids)
+
+    if missing_user_ids.count > 0 {
+        print("Need to request additional users: \(missing_user_ids)")
+        client.getEntitiesByID(missing_user_ids.map { $0.chat_id }) { missing_entities in
+            print("Received additional users: \(missing_entities)")
+            cb(UserList(
+                client: client,
+                self_entity: initial_data.self_entity,
+                entities: initial_data.entities + missing_entities.entities,
+                conv_parts: initial_data.conversation_participants
+            ))
+        }
+    } else {
+        cb(UserList(
+            client: client,
+            self_entity: initial_data.self_entity,
+            entities: initial_data.entities,
+            conv_parts: initial_data.conversation_participants
+        ))
     }
 }

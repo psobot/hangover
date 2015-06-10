@@ -13,9 +13,7 @@ import Alamofire
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        withAuthenticatedManager { (manager: Alamofire.Manager) in
-            Client(manager: manager).connect()
-        }
+        
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {

@@ -27,7 +27,11 @@ class User {
         self.id = user_id
         self.full_name = full_name == nil ? User.DEFAULT_NAME : full_name!
         self.first_name = first_name == nil ? self.full_name.componentsSeparatedByString(" ").first! : first_name!
-        self.photo_url = photo_url
+        if let photo_url = photo_url {
+            self.photo_url = "https:" + photo_url
+        } else {
+            self.photo_url = nil
+        }
         self.emails = emails
         self.is_self = is_self
     }

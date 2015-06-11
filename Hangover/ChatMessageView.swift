@@ -21,6 +21,7 @@ class ChatMessageEventView : NSView {
     }
 
     func configureWithMessage(message: ChatMessageEvent, user: User) {
+        NSLog("Photo URL: \(user.photo_url)")
         if let photoURLString = user.photo_url, photoURL = NSURL(string: photoURLString) {
             avatarView.loadImageFromURL(photoURL)
         }

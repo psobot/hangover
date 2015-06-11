@@ -23,14 +23,19 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
     }
 
     override func viewWillAppear() {
-        self.conversation?.getEvents(conversation?.events.first?.id, max_events: 50)
-        conversationTableView.scrollRowToVisible(self.numberOfRowsInTableView(conversationTableView) - 1)
-
         NSNotificationCenter.defaultCenter().addObserver(self,
             selector: Selector("windowDidBecomeKey:"),
             name: NSWindowDidBecomeKeyNotification,
-            object: self.view.window
+            object: self.window
         )
+
+        if self.window?.keyWindow ?? false {
+            self.windowDidBecomeKey(nil)
+        }
+
+        if let window = self.window, name = conversation?.name {
+            window.title = name
+        }
     }
 
     override func viewWillDisappear() {
@@ -40,14 +45,16 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         )
     }
 
-    override func becomeFirstResponder() -> Bool {
-        print("conversation view controller becoming first responder")
-        return super.becomeFirstResponder()
-    }
-
     override var representedObject: AnyObject? {
         didSet {
+            if let oldConversation = oldValue as? Conversation {
+                oldConversation.delegate = nil
+            }
+
             self.conversation?.delegate = self
+            self.conversation?.getEvents(conversation?.events.first?.id, max_events: 50)
+            conversationTableView.reloadData()
+            conversationTableView.scrollRowToVisible(self.numberOfRowsInTableView(conversationTableView) - 1)
         }
     }
 
@@ -119,7 +126,7 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
 
     // MARK: Window notifications
 
-    func windowDidBecomeKey(_: NSNotification) {
+    func windowDidBecomeKey(sender: AnyObject?) {
         //  Delay here to ensure that small context switches don't send focus messages.
         delay(1) {
             if let window = self.window where window.keyWindow {
@@ -135,7 +142,7 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
             return
         }
 
-        let typingTimeout = 1.0
+        let typingTimeout = 0.4
         let now = NSDate()
 
         if lastTypingTimestamp == nil || NSDate().timeIntervalSinceDate(lastTypingTimestamp!) > typingTimeout {

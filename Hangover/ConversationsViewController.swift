@@ -76,28 +76,19 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
 
     func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
         if let list = conversationList?.get_all() {
-            let conversation = list[row]
-            let users = conversation.user_list.get_all()
-            let user_names = ", ".join(users.map { $0.full_name })
-            return user_names
+            return list[row].name
         }
         return nil
     }
 
-    var conversationWindowController: NSWindowController?
     @IBAction func onDoubleClick(sender: AnyObject) {
         if let list = conversationList?.get_all() {
             let conversation = list[self.conversationTableView.clickedRow]
             print("Conversation: \(conversation)")
 
-            let storyboard = NSStoryboard(name:"Main", bundle:nil)
-
-            conversationWindowController = storyboard.instantiateControllerWithIdentifier("ConversationWindowController") as? NSWindowController
-            if let conversationViewController = conversationWindowController?.contentViewController as? ConversationViewController {
+            if let conversationViewController = (self.parentViewController as? NSSplitViewController)?.splitViewItems[1].viewController as? ConversationViewController {
                 conversationViewController.representedObject = conversation
             }
-            conversationWindowController?.showWindow(nil)
-
         } else {
             print("No conversation")
         }

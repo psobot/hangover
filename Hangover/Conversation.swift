@@ -277,14 +277,17 @@ class Conversation {
 //                    for part in self._conversation.participant_data]
 //            }
 //        }
-//
-//        var name {
-//            get {
-//                // The conversation's custom name, or nil if it doesn't have one.
-//                return self._conversation.name
-//            }
-//        }
-//
+
+    var name: String {
+        get {
+            if let name = self.conversation.name {
+                return name as String
+            } else {
+                return ", ".join(user_list.get_all().filter { $0.is_self }.map { $0.full_name })
+            }
+        }
+    }
+
 //        var last_modified {
 //            get {
 //                // datetime timestamp of when the conversation was last modified.

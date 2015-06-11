@@ -12,6 +12,7 @@ import Alamofire
 class ConversationViewController: NSViewController, ConversationDelegate, NSTableViewDataSource {
 
     @IBOutlet weak var conversationTableView: NSTableView!
+    @IBOutlet weak var messageTextField: NSTextField!
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -40,7 +41,8 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
     }
 
     func conversation(conversation: Conversation, didReceiveEvent: ConversationEvent) {
-
+        conversationTableView.reloadData()
+        conversationTableView.scrollRowToVisible(self.numberOfRowsInTableView(conversationTableView) - 1)
     }
 
     func conversation(conversation: Conversation, didReceiveWatermarkNotification: WatermarkNotification) {
@@ -58,8 +60,12 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
 
     func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
         if let message = conversation?.messages[row] {
-            return message.text
+            return message.user_id.chat_id + "said: " + message.text
         }
         return nil
+    }
+    @IBAction func messageTextFieldDidAction(sender: AnyObject) {
+        conversation?.sendMessage([ChatMessageSegment(text: messageTextField.stringValue)])
+        messageTextField.stringValue = ""
     }
 }

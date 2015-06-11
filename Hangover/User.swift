@@ -107,7 +107,7 @@ class UserList : NSObject {
         print("UserList initialized with \(user_dict.count) users.")
         NSNotificationCenter.defaultCenter().addObserver(
             self,
-            selector: Selector("on_state_update_notification"),
+            selector: Selector("on_state_update_notification:"),
             name: ClientStateUpdatedNotification,
             object: self.client
         )

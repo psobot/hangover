@@ -709,14 +709,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gCf-gh-ObP">
-                                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
-                                <clipView key="contentView" ambiguous="YES" id="q5q-sZ-aWf">
-                                    <rect key="frame" x="1" y="17" width="478" height="252"/>
+                            <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gCf-gh-ObP">
+                                <rect key="frame" x="0.0" y="22" width="480" height="248"/>
+                                <clipView key="contentView" id="q5q-sZ-aWf">
+                                    <rect key="frame" x="1" y="17" width="478" height="230"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="Ks8-wK-nQy" id="F84-Gi-Rrw">
-                                            <rect key="frame" x="0.0" y="0.0" width="478" height="252"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="478" height="230"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -741,11 +741,11 @@
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="J8M-I7-agq">
-                                    <rect key="frame" x="1" y="253" width="478" height="16"/>
+                                    <rect key="frame" x="1" y="1" width="0.0" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="EyY-Qf-GFZ">
-                                    <rect key="frame" x="224" y="17" width="15" height="102"/>
+                                    <rect key="frame" x="-15" y="17" width="16" height="0.0"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <tableHeaderView key="headerView" id="Ks8-wK-nQy">
@@ -753,10 +753,32 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </tableHeaderView>
                             </scrollView>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="orf-m2-ObS">
+                                <rect key="frame" x="0.0" y="0.0" width="480" height="22"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Type your message here..." drawsBackground="YES" id="nRY-lf-Vew">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <action selector="messageTextFieldDidAction:" target="2Dj-Ou-rHP" id="E9s-PB-Y89"/>
+                                </connections>
+                            </textField>
                         </subviews>
+                        <constraints>
+                            <constraint firstItem="gCf-gh-ObP" firstAttribute="top" secondItem="hAN-a4-RD8" secondAttribute="top" id="8Qu-ca-goK"/>
+                            <constraint firstItem="orf-m2-ObS" firstAttribute="top" secondItem="gCf-gh-ObP" secondAttribute="bottom" id="Lpy-iP-C2W"/>
+                            <constraint firstAttribute="bottom" secondItem="orf-m2-ObS" secondAttribute="bottom" id="Xwm-LC-G3z"/>
+                            <constraint firstAttribute="trailing" secondItem="gCf-gh-ObP" secondAttribute="trailing" id="abZ-Ab-3LT"/>
+                            <constraint firstItem="orf-m2-ObS" firstAttribute="top" secondItem="gCf-gh-ObP" secondAttribute="bottom" id="b01-8Q-OGh"/>
+                            <constraint firstItem="gCf-gh-ObP" firstAttribute="leading" secondItem="hAN-a4-RD8" secondAttribute="leading" id="eHq-Gv-4Jl"/>
+                            <constraint firstAttribute="trailing" secondItem="orf-m2-ObS" secondAttribute="trailing" id="gL2-TR-jFQ"/>
+                            <constraint firstItem="orf-m2-ObS" firstAttribute="leading" secondItem="hAN-a4-RD8" secondAttribute="leading" id="qGx-aa-3JW"/>
+                        </constraints>
                     </view>
                     <connections>
                         <outlet property="conversationTableView" destination="F84-Gi-Rrw" id="52P-a5-Kgv"/>
+                        <outlet property="messageTextField" destination="orf-m2-ObS" id="ziP-OV-it5"/>
                     </connections>
                 </viewController>
                 <customObject id="6rN-Nv-GHw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
@@ -808,7 +830,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="Oqc-Nd-c8T" id="aTO-NH-oNU">
-                                            <rect key="frame" x="0.0" y="0.0" width="478" height="252"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="478" height="19"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>

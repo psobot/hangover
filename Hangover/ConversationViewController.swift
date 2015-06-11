@@ -9,7 +9,7 @@
 import Cocoa
 import Alamofire
 
-class ConversationViewController: NSViewController, ConversationDelegate, NSTableViewDataSource, NSTableViewDelegate {
+class ConversationViewController: NSViewController, ConversationDelegate, NSTableViewDataSource, NSTableViewDelegate, NSTextFieldDelegate {
 
     @IBOutlet weak var conversationTableView: NSTableView!
     @IBOutlet weak var messageTextField: NSTextField!
@@ -18,11 +18,31 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
 
         conversationTableView.setDataSource(self)
         conversationTableView.setDelegate(self)
+
+        messageTextField.delegate = self
     }
 
     override func viewWillAppear() {
         self.conversation?.getEvents(conversation?.events.first?.id, max_events: 50)
         conversationTableView.scrollRowToVisible(self.numberOfRowsInTableView(conversationTableView) - 1)
+
+        NSNotificationCenter.defaultCenter().addObserver(self,
+            selector: Selector("windowDidBecomeKey:"),
+            name: NSWindowDidBecomeKeyNotification,
+            object: self.view.window
+        )
+    }
+
+    override func viewWillDisappear() {
+        NSNotificationCenter.defaultCenter().removeObserver(self,
+            name: NSWindowDidBecomeKeyNotification,
+            object: self.view.window
+        )
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        print("conversation view controller becoming first responder")
+        return super.becomeFirstResponder()
     }
 
     override var representedObject: AnyObject? {
@@ -34,6 +54,12 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
     var conversation: Conversation? {
         get {
             return representedObject as? Conversation
+        }
+    }
+
+    var window: NSWindow? {
+        get {
+            return self.view.window
         }
     }
 
@@ -91,6 +117,39 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         return nil
     }
 
+    // MARK: Window notifications
+
+    func windowDidBecomeKey(_: NSNotification) {
+        //  Delay here to ensure that small context switches don't send focus messages.
+        delay(1) {
+            if let window = self.window where window.keyWindow {
+                self.conversation?.setFocus()
+            }
+        }
+    }
+
+    // MARK: NSTextFieldDelegate
+    var lastTypingTimestamp: NSDate?
+    override func controlTextDidChange(obj: NSNotification) {
+        if messageTextField.stringValue == "" {
+            return
+        }
+
+        let typingTimeout = 1.0
+        let now = NSDate()
+
+        if lastTypingTimestamp == nil || NSDate().timeIntervalSinceDate(lastTypingTimestamp!) > typingTimeout {
+            self.conversation?.setTyping(TypingStatus.TYPING)
+        }
+
+        lastTypingTimestamp = now
+        delay(typingTimeout) {
+            if let ts = self.lastTypingTimestamp where NSDate().timeIntervalSinceDate(ts) > typingTimeout {
+                self.conversation?.setTyping(TypingStatus.STOPPED)
+            }
+        }
+    }
+
     // MARK: IBActions
 
     @IBAction func messageTextFieldDidAction(sender: AnyObject) {
@@ -100,4 +159,6 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
             messageTextField.stringValue = ""
         }
     }
+
+
 }

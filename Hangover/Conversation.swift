@@ -94,6 +94,10 @@ class Conversation {
         return self.user_list.get_user(user_id)
     }
 
+    func setFocus() {
+        self.client.setFocus(id)
+    }
+
     func sendMessage(segments: [ChatMessageSegment],
         image_file: String? = nil,
         image_id: String? = nil,
@@ -163,9 +167,10 @@ class Conversation {
 //        self.client.setconversationnotificationlevel(self.id_, level, cb)
 //    }
 
-    func set_typing(typing: TypingStatus = TypingStatus.TYPING, cb: (() -> Void)? = nil) {
+    func setTyping(typing: TypingStatus = TypingStatus.TYPING, cb: (() -> Void)? = nil) {
         // Set typing status.
         // TODO: Add rate-limiting to avoid unnecessary requests.
+        print("Calling setTyping with \(id) \(typing)")
         client.setTyping(id, typing: typing, cb: cb)
     }
 

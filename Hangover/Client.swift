@@ -519,21 +519,18 @@ class Client : ChannelDelegate {
     //            [], []
     //        ])
     //        return json.loads(res.body.decode())
-    //
-    //    @asyncio.coroutine
-    //    def setfocus(self, conversation_id):
-    //        """Set focus (occurs whenever you give focus to a client).
-    //
-    //        Raises hangups.NetworkError if the request fails.
-    //        """
-    //        self.request('conversations/setfocus', [
-    //            self.getRequestHeader(),
-    //            [conversation_id],
-    //            1,
-    //            20
-    //        ])
-    //        return json.loads(res.body.decode())
-    //
+
+    func setFocus(conversation_id: String, cb: (() -> Void)? = nil) {
+        // Set focus (occurs whenever you give focus to a client).
+
+        self.request("conversations/setfocus", body: [
+            self.getRequestHeader(),
+            [conversation_id],
+            1,
+            20
+        ]){ (_, _, r, _) in self.verifyResponseOK(r as! NSData); cb?() }
+    }
+    
     //    @asyncio.coroutine
     //    def searchentities(self, search_string, max_results):
     //        """Search for people.

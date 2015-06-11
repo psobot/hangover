@@ -7,19 +7,18 @@
         <customObject id="-2" userLabel="File's Owner"/>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customView identifier="ChatMessageLeftView" id="c22-O7-iKe" customClass="ChatMessageLeftView" customModule="Hangover" customModuleProvider="target">
+        <customView identifier="ChatMessageLeftView" misplaced="YES" id="c22-O7-iKe" customClass="ChatMessageLeftView" customModule="Hangover" customModuleProvider="target">
             <rect key="frame" x="0.0" y="0.0" width="480" height="48"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Omf-AH-y7v">
+                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Omf-AH-y7v">
                     <rect key="frame" x="0.0" y="0.0" width="48" height="48"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="48" id="O9E-LH-Kvg"/>
                         <constraint firstAttribute="width" constant="48" id="b2f-z4-dF7"/>
                     </constraints>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="utz-vh-cJr"/>
                 </imageView>
-                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qnH-Sl-qUG">
+                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" misplaced="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qnH-Sl-qUG">
                     <rect key="frame" x="56" y="0.0" width="426" height="48"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="ZqS-Sp-RMk">
                         <font key="font" metaFont="system"/>
@@ -46,19 +45,18 @@
             </connections>
             <point key="canvasLocation" x="139" y="151"/>
         </customView>
-        <customView identifier="ChatMessageRightView" id="c6B-ye-dqo" customClass="ChatMessageRightView" customModule="Hangover" customModuleProvider="target">
+        <customView identifier="ChatMessageRightView" misplaced="YES" id="c6B-ye-dqo" customClass="ChatMessageRightView" customModule="Hangover" customModuleProvider="target">
             <rect key="frame" x="0.0" y="0.0" width="480" height="48"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="qrv-Xh-vOM">
+                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qrv-Xh-vOM">
                     <rect key="frame" x="432" y="0.0" width="48" height="48"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="48" id="BjI-8z-sb5"/>
-                        <constraint firstAttribute="height" constant="48" id="es4-C9-udc"/>
                     </constraints>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="IPe-hF-qZo"/>
                 </imageView>
-                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e5D-UT-dTt">
+                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" misplaced="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e5D-UT-dTt">
                     <rect key="frame" x="-2" y="0.0" width="426" height="48"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" id="VtY-G6-ejP">
                         <font key="font" metaFont="system"/>

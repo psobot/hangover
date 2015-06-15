@@ -9,10 +9,16 @@
 import Cocoa
 import Alamofire
 
-class ConversationViewController: NSViewController, ConversationDelegate, NSTableViewDataSource, NSTableViewDelegate, NSTextFieldDelegate {
+class ConversationViewController:
+    NSViewController,
+    ConversationDelegate,
+    NSTableViewDataSource,
+    NSTableViewDelegate,
+    NSTextFieldDelegate {
 
     @IBOutlet weak var conversationTableView: NSTableView!
     @IBOutlet weak var messageTextField: NSTextField!
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -20,6 +26,10 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         conversationTableView.setDelegate(self)
 
         messageTextField.delegate = self
+
+        conversationTableView.postsBoundsChangedNotifications = true
+
+        measurementView = ChatMessageView.instantiateFromNib("ChatMessageView", owner: self)
     }
 
     override func viewWillAppear() {
@@ -28,6 +38,12 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
             name: NSWindowDidBecomeKeyNotification,
             object: self.window
         )
+
+        NSNotificationCenter.defaultCenter().addObserver(self,
+            selector: Selector("boundsDidChangeNotification:"),
+            name: NSViewBoundsDidChangeNotification,
+            object: conversationTableView
+        );
 
         if self.window?.keyWindow ?? false {
             self.windowDidBecomeKey(nil)
@@ -43,6 +59,10 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
             name: NSWindowDidBecomeKeyNotification,
             object: self.view.window
         )
+        NSNotificationCenter.defaultCenter().removeObserver(self,
+            name:NSViewBoundsDidChangeNotification,
+            object:conversationTableView
+        );
     }
 
     override var representedObject: AnyObject? {
@@ -94,26 +114,16 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         return conversation?.messages.count ?? 0
     }
 
-    func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
-        if let message = conversation?.messages[row] {
-            let user_name = conversation?.user_list.get_user(message.user_id).full_name
-            return user_name! + " said: " + message.text
-        }
-        return nil
-    }
-
     // MARK: NSTableViewDelegate
-
     func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
         if let message = conversation?.messages[row] {
             if let user = conversation?.user_list.get_user(message.user_id) {
-                let leftView = user.is_self ?? false
-                let viewIdentifier = leftView ? "ChatMessageLeftView" : "ChatMessageRightView"
+                let viewIdentifier = "ChatMessageView"
 
-                var view = tableView.makeViewWithIdentifier(viewIdentifier, owner: self) as? ChatMessageEventView
+                var view = tableView.makeViewWithIdentifier(viewIdentifier, owner: self) as? ChatMessageView
 
                 if view == nil {
-                    view = leftView ? ChatMessageLeftView.instantiateFromNib("ChatMessageEventView", owner: self) : ChatMessageRightView.instantiateFromNib("ChatMessageEventView", owner: self)
+                    view = ChatMessageView.instantiateFromNib("ChatMessageView", owner: self)
                     view!.identifier = viewIdentifier
                 }
 
@@ -122,6 +132,14 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
             }
         }
         return nil
+    }
+
+    func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        if let message = conversation?.messages[row] {
+            return measureHeightOfViewWithWidth(message, width: self.view.frame.width)
+        } else {
+            return 0
+        }
     }
 
     // MARK: Window notifications
@@ -133,6 +151,10 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
                 self.conversation?.setFocus()
             }
         }
+    }
+
+    func boundsDidChangeNotification(sender: AnyObject?) {
+        conversationTableView.reloadData()
     }
 
     // MARK: NSTextFieldDelegate
@@ -158,7 +180,6 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
     }
 
     // MARK: IBActions
-
     @IBAction func messageTextFieldDidAction(sender: AnyObject) {
         let text = messageTextField.stringValue
         if text.characters.count > 0 {
@@ -167,5 +188,17 @@ class ConversationViewController: NSViewController, ConversationDelegate, NSTabl
         }
     }
 
-
+    var measurementView: ChatMessageView?
+    func measureHeightOfViewWithWidth(message: ChatMessageEvent, width: CGFloat) -> CGFloat {
+        if let measurementView = measurementView {
+            if let user = conversation?.user_list.get_user(message.user_id) {
+                measurementView.configureWithMessage(message, user: user)
+                let measurementViewTextXPadding = measurementView.frame.width - measurementView.textLabel.frame.width
+                measurementView.textLabel.preferredMaxLayoutWidth = width + measurementViewTextXPadding
+                measurementView.layout()
+                return measurementView.fittingSize.height
+            }
+        }
+        return 0
+    }
 }

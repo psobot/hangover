@@ -8,52 +8,12 @@
 
 import Cocoa
 
-class ChatMessageEventView : NSView {
-    var avatarView: NSImageView! {
-        get {
-            return nil
-        }
-    }
-    var textLabel: NSTextField! {
-        get {
-            return nil
-        }
-    }
+class ChatMessageView : NSTableCellView {
+    @IBOutlet weak var textLabel: NSTextField!
 
     func configureWithMessage(message: ChatMessageEvent, user: User) {
-        NSLog("Photo URL: \(user.photo_url)")
-        if let photoURLString = user.photo_url, photoURL = NSURL(string: photoURLString) {
-            avatarView.loadImageFromURL(photoURL)
-        }
-        textLabel.stringValue = message.text
-    }
-}
-
-class ChatMessageLeftView : ChatMessageEventView {
-    @IBOutlet weak var _avatarView: NSImageView!
-    @IBOutlet weak var _textLabel: NSTextField!
-    override var avatarView: NSImageView! {
-        get {
-            return _avatarView
-        }
-    }
-    override var textLabel: NSTextField! {
-        get {
-            return _textLabel
-        }
-    }
-}
-class ChatMessageRightView : ChatMessageEventView {
-    @IBOutlet weak var _avatarView: NSImageView!
-    @IBOutlet weak var _textLabel: NSTextField!
-    override var avatarView: NSImageView! {
-        get {
-            return _avatarView
-        }
-    }
-    override var textLabel: NSTextField! {
-        get {
-            return _textLabel
-        }
+        textLabel.alignment = user.is_self ? NSTextAlignment.Right : NSTextAlignment.Left
+        textLabel.stringValue = message.text + message.text + message.text
+        layer?.backgroundColor = NSColor.greenColor().CGColor
     }
 }

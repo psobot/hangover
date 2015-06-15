@@ -5,3 +5,4 @@
 #import <CommonCrypto/CommonCrypto.h>
 #import <JavascriptCore/JavascriptCore.h>
 #import "NSString+SHA1.h"
+#import <Valet/Valet.h>

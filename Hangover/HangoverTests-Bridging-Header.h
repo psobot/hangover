@@ -3,3 +3,4 @@
 //
 
 #import "Hangover-Bridging-Header.h"
+#import <Valet/Valet.h>

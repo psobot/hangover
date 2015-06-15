@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8121.17" systemVersion="14D136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8121.17"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView identifier="ConversationListItemView" id="c22-O7-iKe" customClass="ConversationListItemView" customModule="Hangover" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="270" height="64"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ICN-Ij-OZ2">
+                    <rect key="frame" x="20" y="8" width="48" height="48"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="48" id="8Qu-RP-s65"/>
+                        <constraint firstAttribute="width" constant="48" id="XAe-NM-fzQ"/>
+                    </constraints>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSUserGuest" id="RSc-oG-Jyd"/>
+                </imageView>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="B4a-1N-ZUu">
+                    <rect key="frame" x="74" y="41" width="108" height="17"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Jane Doe" id="Iif-kR-OvX">
+                        <font key="font" metaFont="systemBold"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ic8-3K-iyK">
+                    <rect key="frame" x="182" y="42" width="78" height="16"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="74" id="XyQ-kv-Gj5"/>
+                    </constraints>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="9:05 PM" id="h4r-w2-8eE">
+                        <font key="font" metaFont="cellTitle"/>
+                        <color key="textColor" name="disabledControlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zVn-lp-JC3">
+                    <rect key="frame" x="74" y="10" width="188" height="32"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="32" id="ggY-Y9-f3W"/>
+                    </constraints>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="This was a message that was sent to me!" id="ZIN-cb-de0">
+                        <font key="font" metaFont="cellTitle"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <constraints>
+                <constraint firstItem="zVn-lp-JC3" firstAttribute="leading" secondItem="ICN-Ij-OZ2" secondAttribute="trailing" constant="8" id="8LI-Ac-bLS"/>
+                <constraint firstAttribute="trailing" secondItem="ic8-3K-iyK" secondAttribute="trailing" constant="12" id="BQL-WT-Gl3"/>
+                <constraint firstAttribute="bottom" secondItem="zVn-lp-JC3" secondAttribute="bottom" constant="10" id="GPM-kA-Uro"/>
+                <constraint firstItem="B4a-1N-ZUu" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="6" id="JHA-F7-BGH"/>
+                <constraint firstItem="ICN-Ij-OZ2" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="8" id="KTg-WD-jTG"/>
+                <constraint firstAttribute="trailing" secondItem="zVn-lp-JC3" secondAttribute="trailing" constant="10" id="O1a-Sb-UWq"/>
+                <constraint firstAttribute="bottom" secondItem="ICN-Ij-OZ2" secondAttribute="bottom" constant="8" id="R8T-YT-bsk"/>
+                <constraint firstItem="ic8-3K-iyK" firstAttribute="leading" secondItem="B4a-1N-ZUu" secondAttribute="trailing" constant="4" id="RD3-En-Ngb"/>
+                <constraint firstItem="zVn-lp-JC3" firstAttribute="leading" secondItem="ICN-Ij-OZ2" secondAttribute="trailing" constant="8" id="Ugu-em-XuA"/>
+                <constraint firstItem="ICN-Ij-OZ2" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" id="WUc-St-ZUo"/>
+                <constraint firstItem="B4a-1N-ZUu" firstAttribute="leading" secondItem="ICN-Ij-OZ2" secondAttribute="trailing" constant="8" id="bxx-GI-fxX"/>
+                <constraint firstItem="ic8-3K-iyK" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="6" id="stM-Yr-Rv7"/>
+            </constraints>
+            <connections>
+                <outlet property="avatarView" destination="ICN-Ij-OZ2" id="ab3-Bp-sRa"/>
+                <outlet property="lastMessageView" destination="zVn-lp-JC3" id="DqU-sF-zLl"/>
+                <outlet property="nameView" destination="B4a-1N-ZUu" id="zCY-gd-Cj9"/>
+                <outlet property="timeView" destination="ic8-3K-iyK" id="aHj-bf-PWZ"/>
+            </connections>
+            <point key="canvasLocation" x="51" y="158"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="NSUserGuest" width="32" height="32"/>
+    </resources>
+</document>

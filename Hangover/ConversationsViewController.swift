@@ -9,13 +9,19 @@
 import Cocoa
 import Alamofire
 
-class ConversationsViewController: NSViewController, ClientDelegate, NSTableViewDataSource {
+class ConversationsViewController: NSViewController, ClientDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSplitViewDelegate {
 
     @IBOutlet weak var conversationTableView: NSTableView!
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        //  TODO: Don't do this here
+        if let splitView = (self.parentViewController as? NSSplitViewController)?.splitView {
+            splitView.delegate = self
+        }
+
         conversationTableView.setDataSource(self)
+        conversationTableView.setDelegate(self)
 
         //  TODO: Move this out to AppDelegate
         withAuthenticatedManager { (manager: Alamofire.Manager) in
@@ -37,7 +43,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
         }
     }
 
-    // client delegate
+    // MARK: Client Delegate
     var conversationList: ConversationList? {
         didSet {
             conversationTableView.reloadData()
@@ -54,6 +60,8 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
                 sync_timestamp: initialData.sync_timestamp
             )
             print("Conversation list: \(self.conversationList)")
+            self.conversationTableView.reloadData()
+            self.conversationTableView.selectRowIndexes(NSIndexSet(index: 0), byExtendingSelection: false)
         }
     }
 
@@ -69,28 +77,82 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
         
     }
 
-    // NSTableViewDataSource delegate
+    // MARK: NSTableViewDataSource delegate
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
         return conversationList?.conv_dict.count ?? 0
     }
 
-    func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
-        if let list = conversationList?.get_all() {
-            return list[row].name
+    func tableViewSelectionDidChange(notification: NSNotification) {
+        if conversationTableView.selectedRow >= 0 {
+            selectConversation(conversationList?.get_all()[conversationTableView.selectedRow])
+        } else {
+            selectConversation(nil)
+        }
+    }
+
+    // MARK: NSTableViewDelegate
+
+    func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        if let conversation = conversationList?.get_all()[row] {
+            var view = tableView.makeViewWithIdentifier("ConversationListItemView", owner: self) as? ConversationListItemView
+
+            if view == nil {
+                view = ConversationListItemView.instantiateFromNib("ConversationListItemView", owner: self)
+                view!.identifier = "ConversationListItemView"
+            }
+
+            view!.configureWithConversation(conversation)
+            return view
         }
         return nil
     }
 
-    @IBAction func onDoubleClick(sender: AnyObject) {
-        if let list = conversationList?.get_all() {
-            let conversation = list[self.conversationTableView.clickedRow]
-            print("Conversation: \(conversation)")
+    func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        return 64
+    }
 
-            if let conversationViewController = (self.parentViewController as? NSSplitViewController)?.splitViewItems[1].viewController as? ConversationViewController {
-                conversationViewController.representedObject = conversation
-            }
-        } else {
-            print("No conversation")
+    // MARK: NSSplitViewDelegate
+    func splitView(
+        splitView: NSSplitView,
+        constrainSplitPosition proposedPosition: CGFloat,
+        ofSubviewAt dividerIndex: Int
+    ) -> CGFloat {
+        switch (dividerIndex) {
+        case 0: return 270
+        default: return proposedPosition
+        }
+    }
+
+    func splitView(splitView: NSSplitView, shouldAdjustSizeOfSubview view: NSView) -> Bool {
+        return splitView.subviews.indexOf(view) != 0
+    }
+
+    func splitView(splitView: NSSplitView, resizeSubviewsWithOldSize oldSize: NSSize) {
+        let dividerThickness = CGFloat(0)
+
+        let leftViewSize = NSMakeSize(
+            270,
+            splitView.frame.size.height
+        )
+        let rightViewSize = NSMakeSize(
+            splitView.frame.size.width - leftViewSize.width - dividerThickness,
+            splitView.frame.size.height
+        )
+
+        // Resizing and placing the left view
+        splitView.subviews[0].setFrameOrigin(NSMakePoint(0, 0))
+        splitView.subviews[0].setFrameSize(leftViewSize)
+
+        // Resizing and placing the right view
+        splitView.subviews[1].setFrameOrigin(NSMakePoint(leftViewSize.width + dividerThickness, 0))
+        splitView.subviews[1].setFrameSize(rightViewSize)
+    }
+
+    // MARK: IBActions
+
+    func selectConversation(conversation: Conversation?) {
+        if let conversationViewController = (self.parentViewController as? NSSplitViewController)?.splitViewItems[1].viewController as? ConversationViewController {
+            conversationViewController.representedObject = conversation
         }
     }
 }

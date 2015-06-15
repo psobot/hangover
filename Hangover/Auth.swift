@@ -8,6 +8,7 @@
 
 import Foundation
 import Alamofire
+import Valet
 
 let OAUTH2_SCOPE = "https://www.google.com/accounts/OAuthLogin"
 let OAUTH2_CLIENT_ID = "936475272427.apps.googleusercontent.com"
@@ -15,38 +16,38 @@ let OAUTH2_CLIENT_SECRET = "KWsJlkaMn1jGLxQpWxMnOox-"
 let OAUTH2_LOGIN_URL = "https://accounts.google.com/o/oauth2/auth?client_id=\(OAUTH2_CLIENT_ID)&scope=\(OAUTH2_SCOPE)&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code"
 let OAUTH2_TOKEN_REQUEST_URL = "https://accounts.google.com/o/oauth2/token"
 
+let VALET_IDENTIFIER = "HangoverGoogleAuthTokens"
+
+func getValet() -> VALValet {
+    return VALValet(identifier: VALET_IDENTIFIER, accessibility: VALAccessibility.AlwaysThisDeviceOnly)
+}
 
 func loadCodes() -> (access_token: String, refresh_token: String)? {
-    let defaults = NSUserDefaults.standardUserDefaults()
-    
-    let at = defaults.stringForKey("access_token")
-    let rt = defaults.stringForKey("refresh_token")
-    if let at = at {
-        if let rt = rt {
-            return (access_token: at, refresh_token: rt)
-        }
+    let valet = getValet()
+
+    let at = valet.stringForKey("access_token")
+    let rt = valet.stringForKey("refresh_token")
+    if let at = at, let rt = rt {
+        return (access_token: at, refresh_token: rt)
     }
 
     //  If we can't get the access token and refresh token,
     //  remove them both.
-    defaults.removeObjectForKey("access_token")
-    defaults.removeObjectForKey("refresh_token")
-    defaults.synchronize()
+    valet.removeObjectForKey("access_token")
+    valet.removeObjectForKey("refresh_token")
     return nil
 }
 
 func saveCodes(access_token: String, refresh_token: String) {
-    let defaults = NSUserDefaults.standardUserDefaults()
-    defaults.setObject(access_token, forKey: "access_token")
-    defaults.setObject(refresh_token, forKey: "refresh_token")
-    defaults.synchronize()
+    let valet = getValet()
+    valet.setString(access_token, forKey: "access_token")
+    valet.setString(refresh_token, forKey: "refresh_token")
 }
 
 func clearCodes() {
-    let defaults = NSUserDefaults.standardUserDefaults()
-    defaults.removeObjectForKey("access_token")
-    defaults.removeObjectForKey("refresh_token")
-    defaults.synchronize()
+    let valet = getValet()
+    valet.removeObjectForKey("access_token")
+    valet.removeObjectForKey("refresh_token")
 }
 
 func auth_with_code(auth_code: String, cb: (access_token: String, refresh_token: String) -> Void) {

@@ -97,7 +97,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
             var view = tableView.makeViewWithIdentifier("ConversationListItemView", owner: self) as? ConversationListItemView
 
             if view == nil {
-                view = ConversationListItemView.instantiateFromNib("ConversationListItemView", owner: self)
+                view = ConversationListItemView.instantiateFromNib(identifier: "ConversationListItemView", owner: self)
                 view!.identifier = "ConversationListItemView"
             }
 

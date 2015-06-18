@@ -20,6 +20,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Insert code here to tear down your application
     }
 
-
+    @IBAction func logOutClicked(sender: AnyObject) {
+        print("Log out clicked")
+    }
 }
 

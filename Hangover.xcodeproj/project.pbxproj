@@ -28,7 +28,6 @@
 		333AF2B01B2A9263005098D1 /* NSDate+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333AF2AF1B2A9263005098D1 /* NSDate+Extensions.swift */; };
 		333AF2B11B2B8409005098D1 /* NSDate+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333AF2AF1B2A9263005098D1 /* NSDate+Extensions.swift */; };
 		333AF2B31B2B8414005098D1 /* NSDate+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333AF2B21B2B8414005098D1 /* NSDate+ExtensionsTests.swift */; };
-		333AF2B51B2BA407005098D1 /* ChatMessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 333AF2B41B2BA407005098D1 /* ChatMessageView.xib */; };
 		333AF2B91B2BDF28005098D1 /* MainSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333AF2B81B2BDF28005098D1 /* MainSplitView.swift */; };
 		33405A5C1B153E5200C81DC3 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5B1B153E5200C81DC3 /* Channel.swift */; };
 		33405A5E1B1BF89E00C81DC3 /* Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5D1B1BF89E00C81DC3 /* Auth.swift */; };
@@ -75,6 +74,41 @@
 			remoteGlobalIDString = 33368DB51B12ACD4009B28B2;
 			remoteInfo = Hangover;
 		};
+		33F80F501B323F830075E49B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33F80F481B323F830075E49B /* Valet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA1E1F831A8C46080067C991;
+			remoteInfo = "Valet iOS";
+		};
+		33F80F521B323F830075E49B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33F80F481B323F830075E49B /* Valet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA1E1F8E1A8C46090067C991;
+			remoteInfo = "Valet iOS Tests";
+		};
+		33F80F541B323F830075E49B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33F80F481B323F830075E49B /* Valet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EAF894741B053E0500EDAD6C;
+			remoteInfo = ValetTouchIDTest;
+		};
+		33F80F561B323F830075E49B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33F80F481B323F830075E49B /* Valet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EAEAA8821B167A8600F7AA98;
+			remoteInfo = "Valet Mac";
+		};
+		33F80F581B323F830075E49B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33F80F481B323F830075E49B /* Valet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EAEAA88C1B167A8700F7AA98;
+			remoteInfo = "Valet Mac Tests";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -98,7 +132,6 @@
 		333AF2AD1B2A7BC3005098D1 /* ConversationListItemView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationListItemView.swift; sourceTree = "<group>"; };
 		333AF2AF1B2A9263005098D1 /* NSDate+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSDate+Extensions.swift"; sourceTree = "<group>"; };
 		333AF2B21B2B8414005098D1 /* NSDate+ExtensionsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSDate+ExtensionsTests.swift"; sourceTree = "<group>"; };
-		333AF2B41B2BA407005098D1 /* ChatMessageView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ChatMessageView.xib; sourceTree = "<group>"; };
 		333AF2B81B2BDF28005098D1 /* MainSplitView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainSplitView.swift; sourceTree = "<group>"; };
 		33405A5B1B153E5200C81DC3 /* Channel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
 		33405A5D1B1BF89E00C81DC3 /* Auth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Auth.swift; sourceTree = "<group>"; };
@@ -122,6 +155,7 @@
 		33E9F5BF1B1A1D9F0027F7EC /* Hangover-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Hangover-Bridging-Header.h"; sourceTree = "<group>"; };
 		33E9F5C31B1A2CFE0027F7EC /* Regex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
 		33E9F5CA1B1A3A930027F7EC /* ChannelTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelTests.swift; sourceTree = "<group>"; };
+		33F80F481B323F830075E49B /* Valet.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Valet.xcodeproj; path = Vendor/Valet/Valet.xcodeproj; sourceTree = "<group>"; };
 		4EC65BD313D64EBE774D8841 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		50BDD34C23F9489F6DD6B4CA /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		71000E92426D15A973A8610C /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -154,6 +188,7 @@
 				33368DB71B12ACD4009B28B2 /* Products */,
 				86272A5E8E455B327B105456 /* Pods */,
 				436130E2D699EC081568747A /* Frameworks */,
+				33F80F481B323F830075E49B /* Valet.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -234,7 +269,6 @@
 			children = (
 				33368DC11B12ACD4009B28B2 /* Main.storyboard */,
 				333AF2AB1B2A7B54005098D1 /* ConversationListItemView.xib */,
-				333AF2B41B2BA407005098D1 /* ChatMessageView.xib */,
 			);
 			name = Storyboards;
 			sourceTree = "<group>";
@@ -276,6 +310,18 @@
 				333AF2AD1B2A7BC3005098D1 /* ConversationListItemView.swift */,
 			);
 			name = Views;
+			sourceTree = "<group>";
+		};
+		33F80F491B323F830075E49B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				33F80F511B323F830075E49B /* libValet.a */,
+				33F80F531B323F830075E49B /* Valet iOS Tests.xctest */,
+				33F80F551B323F830075E49B /* ValetTouchIDTest.app */,
+				33F80F571B323F830075E49B /* libValet.dylib */,
+				33F80F591B323F830075E49B /* Valet Mac Tests.xctest */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		436130E2D699EC081568747A /* Frameworks */ = {
@@ -369,6 +415,12 @@
 			mainGroup = 33368DAD1B12ACD4009B28B2;
 			productRefGroup = 33368DB71B12ACD4009B28B2 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 33F80F491B323F830075E49B /* Products */;
+					ProjectRef = 33F80F481B323F830075E49B /* Valet.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				33368DB51B12ACD4009B28B2 /* Hangover */,
@@ -377,13 +429,50 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		33F80F511B323F830075E49B /* libValet.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libValet.a;
+			remoteRef = 33F80F501B323F830075E49B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		33F80F531B323F830075E49B /* Valet iOS Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Valet iOS Tests.xctest";
+			remoteRef = 33F80F521B323F830075E49B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		33F80F551B323F830075E49B /* ValetTouchIDTest.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = ValetTouchIDTest.app;
+			remoteRef = 33F80F541B323F830075E49B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		33F80F571B323F830075E49B /* libValet.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libValet.dylib;
+			remoteRef = 33F80F561B323F830075E49B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		33F80F591B323F830075E49B /* Valet Mac Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Valet Mac Tests.xctest";
+			remoteRef = 33F80F581B323F830075E49B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXResourcesBuildPhase section */
 		33368DB41B12ACD4009B28B2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				33368DC01B12ACD4009B28B2 /* Images.xcassets in Resources */,
-				333AF2B51B2BA407005098D1 /* ChatMessageView.xib in Resources */,
 				33368DC31B12ACD4009B28B2 /* Main.storyboard in Resources */,
 				339576C41B26A52800D1E555 /* Data in Resources */,
 				333AF2AC1B2A7B54005098D1 /* ConversationListItemView.xib in Resources */,
@@ -668,6 +757,7 @@
 			baseConfigurationReference = 4EC65BD313D64EBE774D8841 /* Pods.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -688,6 +778,7 @@
 			baseConfigurationReference = 50BDD34C23F9489F6DD6B4CA /* Pods.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -707,6 +798,7 @@
 			baseConfigurationReference = 4EC65BD313D64EBE774D8841 /* Pods.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -731,6 +823,7 @@
 			baseConfigurationReference = 50BDD34C23F9489F6DD6B4CA /* Pods.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (

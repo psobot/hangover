@@ -1,0 +1,3 @@
+[submodule "Vendor/Valet"]
+	path = Vendor/Valet
+	url = git@github.com:Square/Valet.git

@@ -27,9 +27,7 @@ class ConversationViewController:
 
         messageTextField.delegate = self
 
-        conversationTableView.postsBoundsChangedNotifications = true
-
-        measurementView = ChatMessageView.instantiateFromNib("ChatMessageView", owner: self)
+        self.view.postsFrameChangedNotifications = true
     }
 
     override func viewWillAppear() {
@@ -40,9 +38,9 @@ class ConversationViewController:
         )
 
         NSNotificationCenter.defaultCenter().addObserver(self,
-            selector: Selector("boundsDidChangeNotification:"),
-            name: NSViewBoundsDidChangeNotification,
-            object: conversationTableView
+            selector: Selector("frameDidChangeNotification:"),
+            name: NSViewFrameDidChangeNotification,
+            object: self.view
         );
 
         if self.window?.keyWindow ?? false {
@@ -61,7 +59,7 @@ class ConversationViewController:
         )
         NSNotificationCenter.defaultCenter().removeObserver(self,
             name:NSViewBoundsDidChangeNotification,
-            object:conversationTableView
+            object:self.view
         );
     }
 
@@ -118,13 +116,11 @@ class ConversationViewController:
     func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
         if let message = conversation?.messages[row] {
             if let user = conversation?.user_list.get_user(message.user_id) {
-                let viewIdentifier = "ChatMessageView"
-
-                var view = tableView.makeViewWithIdentifier(viewIdentifier, owner: self) as? ChatMessageView
+                var view = tableView.makeViewWithIdentifier(ChatMessageView.className(), owner: self) as? ChatMessageView
 
                 if view == nil {
-                    view = ChatMessageView.instantiateFromNib("ChatMessageView", owner: self)
-                    view!.identifier = viewIdentifier
+                    view = ChatMessageView(frame: NSZeroRect)
+                    view!.identifier = ChatMessageView.className()
                 }
 
                 view!.configureWithMessage(message, user: user)
@@ -136,7 +132,7 @@ class ConversationViewController:
 
     func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         if let message = conversation?.messages[row] {
-            return measureHeightOfViewWithWidth(message, width: self.view.frame.width)
+            return ChatMessageView.heightForWidth(message.text, width: self.view.frame.width)
         } else {
             return 0
         }
@@ -153,7 +149,9 @@ class ConversationViewController:
         }
     }
 
-    func boundsDidChangeNotification(sender: AnyObject?) {
+    func frameDidChangeNotification(sender: AnyObject?) {
+        //  TODO: This is a horrible, horrible way to do this, and super CPU-intensive.
+        //  B U T   I T   W O R K S   F O R   N O W
         conversationTableView.reloadData()
     }
 
@@ -186,19 +184,5 @@ class ConversationViewController:
             conversation?.sendMessage([ChatMessageSegment(text: text)])
             messageTextField.stringValue = ""
         }
-    }
-
-    var measurementView: ChatMessageView?
-    func measureHeightOfViewWithWidth(message: ChatMessageEvent, width: CGFloat) -> CGFloat {
-        if let measurementView = measurementView {
-            if let user = conversation?.user_list.get_user(message.user_id) {
-                measurementView.configureWithMessage(message, user: user)
-                let measurementViewTextXPadding = measurementView.frame.width - measurementView.textLabel.frame.width
-                measurementView.textLabel.preferredMaxLayoutWidth = width + measurementViewTextXPadding
-                measurementView.layout()
-                return measurementView.fittingSize.height
-            }
-        }
-        return 0
     }
 }

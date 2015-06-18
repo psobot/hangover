@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "EDB0EC7D01B5034EEACDBD0A581E7D04C75DAAFC",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "8465FDAFC093C45B125FA76583265994765BF668" : 0,
+    "EDB0EC7D01B5034EEACDBD0A581E7D04C75DAAFC" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "9F1EF9FF-4050-4A76-B7B9-4E4AB0304B28",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "8465FDAFC093C45B125FA76583265994765BF668" : "hangover\/Vendor\/Valet\/",
+    "EDB0EC7D01B5034EEACDBD0A581E7D04C75DAAFC" : "hangover"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Hangover",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 203,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Hangover.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:Square\/Valet.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8465FDAFC093C45B125FA76583265994765BF668"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "bitbucket.org:psobot\/hangover.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "EDB0EC7D01B5034EEACDBD0A581E7D04C75DAAFC"
+    }
+  ]
+}

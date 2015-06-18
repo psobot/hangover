@@ -7,10 +7,15 @@ third-party Google Hangouts client. In the long term, Hangover is intended
 to be the Google Hangouts client that Google forgot to make for Mac OS X.
 
 At the moment, Hangover is an extremely alpha project. It is slowly becoming
-usable as a chat client, but doesn't even allow for the sending of messages yet.
+usable as a chat client.
 Most of the code has simply been ported over from [the original
 Python](https://github.com/tdryer/hangups) to Swift, and it's not pretty.
 (Forgive me for the sins I've committed while hacking this together.)
+
+## Screenshots
+
+![ooh pretty](https://cloud.githubusercontent.com/assets/213293/8223288/f3b88bb0-1543-11e5-9aaf-d8f90eadd8e3.png)
+
 
 ## Documentation
 

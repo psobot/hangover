@@ -1,4 +1,4 @@
-# Hangover
+![readme_logo](https://cloud.githubusercontent.com/assets/213293/8223759/0eb48b8e-154a-11e5-9a56-fbd2d91fc0e7.png)
 
 Hangover is the first native Mac client for Hangouts, Google's instant
 messaging service. At the moment, it is essentially a native Swift port of [Tom

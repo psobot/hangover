@@ -9,11 +9,15 @@
 import Foundation
 
 protocol ConversationDelegate {
-    func conversation(conversation: Conversation, didChangeTypingStatusTo: TypingStatus)
+    func conversation(conversation: Conversation, didChangeTypingStatusForUser: User, toStatus: TypingStatus)
     func conversation(conversation: Conversation, didReceiveEvent: ConversationEvent)
     func conversation(conversation: Conversation, didReceiveWatermarkNotification: WatermarkNotification)
 
     func conversationDidUpdateEvents(conversation: Conversation)
+
+    //  The conversation did receive an update to its internal state - 
+    //  the sort timestamp probably changed, at least.
+    func conversationDidUpdate(conversation: Conversation)
 }
 
 class Conversation {
@@ -26,17 +30,21 @@ class Conversation {
     var conversation: CLIENT_CONVERSATION
     var events = [ConversationEvent]()
     var events_dict = Dictionary<EventID, ConversationEvent>()
+    var typingStatuses = Dictionary<UserID, TypingStatus>()
 
     var delegate: ConversationDelegate?
+    var conversationList: ConversationList?
 
     init(client: Client,
         user_list: UserList,
         client_conversation: CLIENT_CONVERSATION,
-        client_events: [CLIENT_EVENT] = []
+        client_events: [CLIENT_EVENT] = [],
+        conversationList: ConversationList
     ) {
         self.client = client
         self.user_list = user_list
         self.conversation = client_conversation
+        self.conversationList = conversationList
 
         for event in client_events {
             add_event(event)
@@ -45,7 +53,7 @@ class Conversation {
 
     func on_watermark_notification(notif: WatermarkNotification) {
         // Update the conversations latest_read_timestamp.
-        if self.get_user(notif.user_id).is_self {
+        if self.get_user(notif.user_id).isSelf {
             print("latest_read_timestamp for \(self.id) updated to \(notif.read_timestamp)")
             self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = to_timestamp(notif.read_timestamp)
         }
@@ -65,6 +73,8 @@ class Conversation {
                 to_timestamp(old_timestamp)
             )
         }
+
+        delegate?.conversationDidUpdate(self)
     }
 
     private class func wrap_event(event: CLIENT_EVENT) -> ConversationEvent {
@@ -92,6 +102,16 @@ class Conversation {
     func get_user(user_id: UserID) -> User {
         // Return the User instance with the given UserID.
         return self.user_list.get_user(user_id)
+    }
+
+    var otherUserIsTyping: Bool {
+        get {
+            return self.typingStatuses.filter {
+                (k, v) in !self.user_list.get_user(k).isSelf
+            }.map {
+                (k, v) in v == TypingStatus.TYPING
+            }.first ?? false
+        }
     }
 
     func setFocus() {
@@ -180,19 +200,44 @@ class Conversation {
         // This method will avoid making an API request if it will have no effect.
 
         if read_timestamp == nil {
-            read_timestamp = self.events[-1].timestamp
+            read_timestamp = self.events.last!.timestamp
         }
         if let new_read_timestamp = read_timestamp {
             if new_read_timestamp.compare(self.latest_read_timestamp) == NSComparisonResult.OrderedDescending {
                 print("Setting \(id) latest_read_timestamp from \(latest_read_timestamp) to \(read_timestamp)")
 
                 // Prevent duplicate requests by updating the conversation now.
-                let state = conversation.self_conversation_state
-                state.self_read_state.latest_read_timestamp = to_timestamp(new_read_timestamp)
+                latest_read_timestamp = new_read_timestamp
+
+                delegate?.conversationDidUpdate(self)
+                conversationList?.conversationDidUpdate(self)
 
                 client.updateWatermark(id, read_timestamp: new_read_timestamp, cb: cb)
             }
         }
+    }
+
+    func handleConversationEvent(event: ConversationEvent) {
+        if let delegate = delegate {
+            delegate.conversation(self, didReceiveEvent: event)
+        } else {
+            let user = user_list.get_user(event.user_id)
+            if !user.isSelf {
+                NotificationManager.sharedInstance.sendNotificationFor(event, fromUser: user)
+            }
+        }
+    }
+
+    func handleTypingStatus(status: TypingStatus, forUser user: User) {
+        let existingTypingStatus = typingStatuses[user.id]
+        if existingTypingStatus == nil || existingTypingStatus! != status {
+            typingStatuses[user.id] = status
+            delegate?.conversation(self, didChangeTypingStatusForUser: user, toStatus: status)
+        }
+    }
+
+    func handleWatermarkNotification(status: WatermarkNotification) {
+        delegate?.conversation(self, didReceiveWatermarkNotification: status)
     }
 
     var messages: [ChatMessageEvent] {
@@ -269,57 +314,66 @@ class Conversation {
         }
     }
 
-//        var users {
-//            get {
-//                // User instances of the conversation's current participants.
-//                return [self._user_list.get_user(user.UserID(chat_id=part.id_.chat_id,
-//                    gaia_id=part.id_.gaia_id))
-//                    for part in self._conversation.participant_data]
-//            }
-//        }
+    var users: [User] {
+        get {
+            return conversation.participant_data.map {
+                self.user_list.get_user(UserID(
+                    chat_id: $0.id.chat_id as String,
+                    gaia_id: $0.id.gaia_id as String
+                ))
+            }
+        }
+    }
 
     var name: String {
         get {
             if let name = self.conversation.name {
                 return name as String
             } else {
-                return ", ".join(user_list.get_all().filter { $0.is_self }.map { $0.full_name })
+                return ", ".join(users.filter { !$0.isSelf }.map { $0.full_name })
             }
         }
     }
 
-//        var last_modified {
-//            get {
-//                // datetime timestamp of when the conversation was last modified.
-//                return from_timestamp(
-//                    self._conversation.self_conversation_state.sort_timestamp
-//                )
-//            }
-//        }
+    var last_modified: NSDate {
+        get {
+            return from_timestamp(conversation.self_conversation_state.sort_timestamp)!
+        }
+    }
 
     var latest_read_timestamp: NSDate {
         get {
             // datetime timestamp of the last read ConversationEvent.
             return from_timestamp(conversation.self_conversation_state.self_read_state.latest_read_timestamp)
         }
+        set(newLatestReadTimestamp) {
+            conversation.self_conversation_state.self_read_state.latest_read_timestamp = to_timestamp(newLatestReadTimestamp)
+        }
     }
 
-//        var unread_events {
-//            get {
-//                // List of ConversationEvents that are unread.
-//
-//                // Events are sorted oldest to newest.
-//
-//                // Note that some Hangouts clients don't update the read timestamp for
-//                // certain event types, such as membership changes, so this method may
-//                // return more unread events than these clients will show. There's also a
-//                // delay between sending a message and the user's own message being
-//                // considered read.
-//
-//                return [conv_event for conv_event in self._events
-//                    if conv_event.timestamp > self.latest_read_timestamp]
-//            }
-//        }
+    var unread_events: [ConversationEvent] {
+        get {
+            // List of ConversationEvents that are unread.
+
+            // Events are sorted oldest to newest.
+
+            // Note that some Hangouts clients don't update the read timestamp for
+            // certain event types, such as membership changes, so this method may
+            // return more unread events than these clients will show. There's also a
+            // delay between sending a message and the user's own message being
+            // considered read.
+            return events.filter { $0.timestamp.compare(self.latest_read_timestamp) == .OrderedDescending }
+        }
+    }
+
+    var hasUnreadEvents: Bool {
+        get {
+            if unread_events.first != nil {
+                print("Conversation \(name) has unread events, latest read timestamp is \(self.latest_read_timestamp)")
+            }
+            return unread_events.first != nil
+        }
+    }
 
     var is_archived: Bool {
         get {

@@ -20,7 +20,7 @@
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSUserGuest" id="RSc-oG-Jyd"/>
                 </imageView>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="B4a-1N-ZUu">
-                    <rect key="frame" x="74" y="41" width="108" height="17"/>
+                    <rect key="frame" x="74" y="41" width="122" height="17"/>
                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Jane Doe" id="Iif-kR-OvX">
                         <font key="font" metaFont="systemBold"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -28,9 +28,9 @@
                     </textFieldCell>
                 </textField>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ic8-3K-iyK">
-                    <rect key="frame" x="182" y="42" width="78" height="16"/>
+                    <rect key="frame" x="196" y="42" width="64" height="16"/>
                     <constraints>
-                        <constraint firstAttribute="width" constant="74" id="XyQ-kv-Gj5"/>
+                        <constraint firstAttribute="width" constant="60" id="XyQ-kv-Gj5"/>
                     </constraints>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="9:05 PM" id="h4r-w2-8eE">
                         <font key="font" metaFont="cellTitle"/>

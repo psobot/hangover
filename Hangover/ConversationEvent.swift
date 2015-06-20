@@ -36,7 +36,7 @@ class ConversationEvent : Equatable {
     var timestamp: NSDate {
         get {
             // A timestamp of when the event occurred.
-            return from_timestamp(self.event.timestamp)
+            return from_timestamp(self.event.timestamp)!
         }
     }
 

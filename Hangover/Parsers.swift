@@ -67,6 +67,14 @@ func _parse_payload(payload: [AnyObject]) -> [CLIENT_STATE_UPDATE] {
 
 
 let MicrosecondsPerSecond = 1000000.0
+func from_timestamp(microsecond_timestamp: NSNumber?) -> NSDate? {
+    if microsecond_timestamp == nil {
+        return nil
+    }
+    let date = from_timestamp(microsecond_timestamp!)
+    return date
+}
+
 func from_timestamp(microsecond_timestamp: NSNumber) -> NSDate {
     // Convert a microsecond timestamp to an NSDate instance.
     return NSDate(timeIntervalSince1970: microsecond_timestamp.doubleValue / MicrosecondsPerSecond)
@@ -93,7 +101,7 @@ func parse_typing_status_message(p: CLIENT_SET_TYPING_NOTIFICATION) -> TypingSta
     return TypingStatusMessage(
         conv_id: p.conversation_id.id as String,
         user_id: UserID(chat_id: p.user_id.chat_id as String, gaia_id: p.user_id.gaia_id as String),
-        timestamp: from_timestamp(p.timestamp),
+        timestamp: from_timestamp(p.timestamp)!,
         status: p.status
     )
 }
@@ -110,6 +118,6 @@ func parse_watermark_notification(client_watermark_notification: CLIENT_WATERMAR
             chat_id: client_watermark_notification.participant_id.chat_id as String,
             gaia_id: client_watermark_notification.participant_id.gaia_id as String
         ),
-        read_timestamp: from_timestamp(client_watermark_notification.latest_read_timestamp)
+        read_timestamp: from_timestamp(client_watermark_notification.latest_read_timestamp)!
     )
 }

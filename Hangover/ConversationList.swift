@@ -12,6 +12,9 @@ protocol ConversationListDelegate {
     func conversationList(list: ConversationList, didReceiveEvent event: ConversationEvent)
     func conversationList(list: ConversationList, didChangeTypingStatusTo status: TypingStatus)
     func conversationList(list: ConversationList, didReceiveWatermarkNotification status: WatermarkNotification)
+
+    func conversationListDidUpdate(list: ConversationList)
+    func conversationList(list: ConversationList, didUpdateConversation conversation: Conversation)
 }
 
 class ConversationList : ClientDelegate {
@@ -23,9 +26,9 @@ class ConversationList : ClientDelegate {
 
     var delegate: ConversationListDelegate?
 
-    init(client: Client, conv_states: [CLIENT_CONVERSATION_STATE], user_list: UserList, sync_timestamp: NSDate) {
+    init(client: Client, conv_states: [CLIENT_CONVERSATION_STATE], user_list: UserList, sync_timestamp: NSDate?) {
         self.client = client
-        self.sync_timestamp = sync_timestamp
+        self.sync_timestamp = sync_timestamp ?? NSDate(timeIntervalSince1970: 0)
         self.user_list = user_list
 
         // Initialize the list of conversations from Client"s list of
@@ -40,7 +43,10 @@ class ConversationList : ClientDelegate {
     func get_all(include_archived: Bool = false) -> [Conversation] {
         // Return list of all Conversations.
         // If include_archived is false, do not return any archived conversations.
-        return conv_dict.values.filter { !$0.is_archived || include_archived }
+        let all = conv_dict.values.filter { !$0.is_archived || include_archived }
+        return all.sort({ (a, b) -> Bool in
+            a.last_modified.compare(b.last_modified) == NSComparisonResult.OrderedDescending
+        })
     }
 
     func get(conv_id: String) -> Conversation? {
@@ -55,7 +61,13 @@ class ConversationList : ClientDelegate {
         // Add new conversation from ClientConversation
         let conv_id = client_conversation.conversation_id!.id
         print("Adding new conversation: \(conv_id)")
-        let conv = Conversation(client: client, user_list: user_list, client_conversation: client_conversation, client_events: client_events)
+        let conv = Conversation(
+            client: client,
+            user_list: user_list,
+            client_conversation: client_conversation,
+            client_events: client_events,
+            conversationList: self
+        )
         conv_dict[conv_id as String] = conv
         return conv
     }
@@ -75,7 +87,8 @@ class ConversationList : ClientDelegate {
             let conv_event = conv.add_event(event)
 
             delegate?.conversationList(self, didReceiveEvent: conv_event)
-            conv.delegate?.conversation(conv, didReceiveEvent: conv_event)
+            conv.handleConversationEvent(conv_event)
+            //  TODO: Bold this conversation in the list somehow
         } else {
             print("Received ClientEvent for unknown conversation \(event.conversation_id.id)")
         }
@@ -86,9 +99,11 @@ class ConversationList : ClientDelegate {
         let conv_id = client_conversation.conversation_id!.id
         if let conv = conv_dict[conv_id as String] {
             conv.update_conversation(client_conversation)
+            delegate?.conversationList(self, didUpdateConversation: conv)
         } else {
             self.add_conversation(client_conversation)
         }
+        delegate?.conversationListDidUpdate(self)
     }
 
     func handle_set_typing_notification(set_typing_notification: CLIENT_SET_TYPING_NOTIFICATION) {
@@ -97,7 +112,11 @@ class ConversationList : ClientDelegate {
         if let conv = conv_dict[conv_id as String] {
             let res = parse_typing_status_message(set_typing_notification)
             delegate?.conversationList(self, didChangeTypingStatusTo: res.status)
-            conv.delegate?.conversation(conv, didChangeTypingStatusTo: res.status)
+            let user = user_list.get_user(UserID(
+                chat_id: set_typing_notification.user_id.chat_id as String,
+                gaia_id: set_typing_notification.user_id.gaia_id as String
+            ))
+            conv.handleTypingStatus(res.status, forUser: user)
         } else {
             print("Received ClientSetTypingNotification for unknown conversation \(conv_id)")
         }
@@ -109,7 +128,7 @@ class ConversationList : ClientDelegate {
         if let conv = conv_dict[conv_id as String] {
             let res = parse_watermark_notification(watermark_notification)
             delegate?.conversationList(self, didReceiveWatermarkNotification: res)
-            conv.delegate?.conversation(conv, didReceiveWatermarkNotification: res)
+            conv.handleWatermarkNotification(res)
         } else {
             print("Received WatermarkNotification for unknown conversation \(conv_id)")
         }
@@ -138,6 +157,13 @@ class ConversationList : ClientDelegate {
             }
         }
     }
+
+    // MARK: Calls from conversations
+    func conversationDidUpdate(conversation: Conversation) {
+        delegate?.conversationList(self, didUpdateConversation: conversation)
+    }
+
+    //  MARK: ClientDelegate
 
     func clientDidConnect(client: Client, initialData: InitialData) {
         sync()

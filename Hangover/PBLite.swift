@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import JavaScriptCore
 
 //A parser for the pblite serialization format.
 //
@@ -151,9 +152,10 @@ class Message : NSObject {
 
     func parseRawJSON(input: NSData) -> Self? { return self.dynamicType.parseRawJSON(input) }
     class func parseRawJSON(input: NSData) -> Self? {
-        if let parsedObject = try! NSJSONSerialization.JSONObjectWithData(input,
-            options: NSJSONReadingOptions.AllowFragments) as? NSDictionary {
-                return self.parseJSON(parsedObject)
+        if let parsedObject = JSContext().evaluateScript(
+            "a = " + (NSString(data: input, encoding: 4)! as String)
+        ).toArray() {
+            return self.parse(parsedObject)
         }
         return nil
     }

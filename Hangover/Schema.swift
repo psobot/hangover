@@ -27,6 +27,10 @@ func ==(lhs: Enum, rhs: Enum) -> Bool {
     return lhs.representation == rhs.representation
 }
 
+func !=(lhs: Enum, rhs: Enum) -> Bool {
+    return !(lhs == rhs)
+}
+
 // For pattern matching:
 func ~=(pattern: Enum, predicate: Enum) -> Bool {
     return pattern == predicate
@@ -162,7 +166,7 @@ class CLIENT_CONVERSATION_INTERNAL_STATE : Message {
 
     var inviter_id = USER_ID()
     var invite_timestamp: NSString = ""
-    var sort_timestamp: NSString?
+    var sort_timestamp: NSNumber?
     var active_timestamp: NSString?
 
     var field7: OptionalField = nil

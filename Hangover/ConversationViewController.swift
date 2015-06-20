@@ -88,14 +88,56 @@ class ConversationViewController:
         }
     }
 
-    // conversation delegate
-    func conversation(conversation: Conversation, didChangeTypingStatusTo: TypingStatus) {
-
+    var windowIsKey: Bool {
+        get {
+            return self.window?.keyWindow ?? false
+        }
     }
 
-    func conversation(conversation: Conversation, didReceiveEvent: ConversationEvent) {
+    // conversation delegate
+    func conversation(
+        conversation: Conversation,
+        didChangeTypingStatusForUser user: User,
+        toStatus status: TypingStatus
+    ) {
+        if user.isSelf {
+            return
+        }
+
+        switch (status) {
+        case TypingStatus.TYPING:
+            if conversationTableView.numberOfRows == conversation.messages.count {
+                conversationTableView.insertRowsAtIndexes(
+                    NSIndexSet(index: conversation.messages.count),
+                    withAnimation: .SlideDown
+                )
+                conversationTableView.scrollRowToVisible(conversation.messages.count)
+            }
+        case TypingStatus.STOPPED, TypingStatus.PAUSED:
+            if conversationTableView.numberOfRows > conversation.messages.count {
+                conversationTableView.scrollRowToVisible(conversation.messages.count - 1)
+                conversationTableView.removeRowsAtIndexes(
+                    NSIndexSet(index: conversation.messages.count),
+                    withAnimation: .SlideUp
+                )
+            }
+        default:
+            break
+        }
+
+        //conversationTableView.reloadData()
+    }
+
+    func conversation(conversation: Conversation, didReceiveEvent event: ConversationEvent) {
         conversationTableView.reloadData()
         conversationTableView.scrollRowToVisible(self.numberOfRowsInTableView(conversationTableView) - 1)
+
+        if !windowIsKey {
+            let user = conversation.user_list.get_user(event.user_id)
+            if !user.isSelf {
+                NotificationManager.sharedInstance.sendNotificationFor(event, fromUser: user)
+            }
+        }
     }
 
     func conversation(conversation: Conversation, didReceiveWatermarkNotification: WatermarkNotification) {
@@ -107,32 +149,51 @@ class ConversationViewController:
         conversationTableView.scrollRowToVisible(self.numberOfRowsInTableView(conversationTableView) - 1)
     }
 
+    func conversationDidUpdate(conversation: Conversation) {
+        
+    }
+
     // MARK: NSTableViewDataSource
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
-        return conversation?.messages.count ?? 0
+        return (conversation?.messages.count ?? 0) + ((conversation?.otherUserIsTyping ?? false) ? 1 : 0)
     }
 
     // MARK: NSTableViewDelegate
     func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        if let message = conversation?.messages[row] {
-            if let user = conversation?.user_list.get_user(message.user_id) {
-                var view = tableView.makeViewWithIdentifier(ChatMessageView.className(), owner: self) as? ChatMessageView
+        if let conversation = conversation where row < conversation.messages.count {
+            let message = conversation.messages[row]
+            let user = conversation.user_list.get_user(message.user_id)
+            var view = tableView.makeViewWithIdentifier(ChatMessageView.className(), owner: self) as? ChatMessageView
 
-                if view == nil {
-                    view = ChatMessageView(frame: NSZeroRect)
-                    view!.identifier = ChatMessageView.className()
-                }
-
-                view!.configureWithMessage(message, user: user)
-                return view
+            if view == nil {
+                view = ChatMessageView(frame: NSZeroRect)
+                view!.identifier = ChatMessageView.className()
             }
+
+            view!.configureWithMessage(message, user: user)
+            return view
         }
+
+        if conversation?.otherUserIsTyping ?? false {
+            var view = tableView.makeViewWithIdentifier(ChatTypingView.className(), owner: self) as? ChatTypingView
+
+            if view == nil {
+                view = ChatTypingView(frame: NSZeroRect)
+                view!.identifier = ChatTypingView.className()
+            }
+
+            view!.configureWithTypingStatus(TypingStatus.TYPING)
+            return view
+        }
+
         return nil
     }
 
     func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        if let message = conversation?.messages[row] {
-            return ChatMessageView.heightForWidth(message.text, width: self.view.frame.width)
+        if let conversation = conversation where row < conversation.messages.count {
+            return ChatMessageView.heightForWidth(conversation.messages[row].text, width: self.view.frame.width)
+        } else if row >= conversation!.messages.count && (conversation?.otherUserIsTyping ?? false) {
+            return ChatTypingView.heightForWidth(self.view.frame.width)
         } else {
             return 0
         }
@@ -141,11 +202,16 @@ class ConversationViewController:
     // MARK: Window notifications
 
     func windowDidBecomeKey(sender: AnyObject?) {
+        if let conversation = conversation {
+            NotificationManager.sharedInstance.clearNotificationsFor(conversation)
+        }
+
         //  Delay here to ensure that small context switches don't send focus messages.
         delay(1) {
             if let window = self.window where window.keyWindow {
                 self.conversation?.setFocus()
             }
+            self.conversation?.updateReadTimestamp()
         }
     }
 

@@ -6,7 +6,7 @@
 //  Copyright © 2015 Peter Sobot. All rights reserved.
 //
 
-import Foundation
+import Cocoa
 
 class User {
     static let DEFAULT_NAME = "Unknown"
@@ -20,7 +20,7 @@ class User {
     let first_name: String
     let photo_url: String?
     let emails: [String]
-    let is_self: Bool
+    let isSelf: Bool
 
     init(user_id: UserID, full_name: String?=nil, first_name: String?=nil, photo_url: String?, emails: [String], is_self: Bool) {
         // Initialize a User.
@@ -33,7 +33,7 @@ class User {
             self.photo_url = nil
         }
         self.emails = emails
-        self.is_self = is_self
+        self.isSelf = is_self
     }
 
     convenience init(entity: CLIENT_ENTITY, self_user_id: UserID?) {
@@ -73,6 +73,12 @@ class User {
             emails: [],
             is_self: is_self
         )
+    }
+
+    var image: NSImage? {
+        get {
+            return ImageCache.sharedInstance.getImage(forUser: self)
+        }
     }
 }
 

@@ -157,8 +157,6 @@ class Client : ChannelDelegate {
                 self.header_version = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[6] as? String
                 self.header_id = ((data_dict["ds:4"] as! NSArray)[0] as! NSArray)[7] as? String
 
-                let sync_timestamp = (((data_dict["ds:21"] as! NSArray)[0] as! NSArray)[1] as! NSArray)[4] as! NSNumber
-
                 let self_entity = CLIENT_GET_SELF_INFO_RESPONSE.parse((data_dict["ds:20"] as! NSArray)[0] as? NSArray)!.self_entity
 
                 let initial_conv_states_raw = ((data_dict["ds:19"] as! NSArray)[0] as! NSArray)[3] as! NSArray
@@ -167,14 +165,21 @@ class Client : ChannelDelegate {
                 }
                 let initial_conv_parts = initial_conv_states.flatMap { $0.conversation.participant_data }
 
-                let entities = INITIAL_CLIENT_ENTITIES.parse((data_dict["ds:21"] as! NSArray)[0] as? NSArray)!
-                let initial_entities = (entities.entities) + [
-                    entities.group1.entity,
-                    entities.group2.entity,
-                    entities.group3.entity,
-                    entities.group4.entity,
-                    entities.group5.entity,
-                ].flatMap { $0 }.map { $0.entity }
+                var initial_entities = [CLIENT_ENTITY]()
+                var sync_timestamp: NSNumber? = nil
+
+                if let ds21 = data_dict["ds:21"] as? NSArray {
+                    sync_timestamp = ((ds21[0] as! NSArray)[1] as! NSArray)[4] as? NSNumber
+
+                    let entities = INITIAL_CLIENT_ENTITIES.parse(ds21[0] as? NSArray)!
+                    initial_entities = (entities.entities) + [
+                        entities.group1.entity,
+                        entities.group2.entity,
+                        entities.group3.entity,
+                        entities.group4.entity,
+                        entities.group5.entity,
+                    ].flatMap { $0 }.map { $0.entity }
+                }
 
                 cb(data: InitialData(
                     initial_conv_states,
@@ -220,11 +225,6 @@ class Client : ChannelDelegate {
             self.active_client_state = (
                 state_update.state_update_header.active_client_state
             )
-            print("Updating state: \(state_update)")
-
-            let conversation = state_update.client_conversation?.conversation_id?.id
-            print("Conversation id: \(conversation)")
-
             NSNotificationCenter.defaultCenter().postNotificationName(
                 ClientStateUpdatedNotification,
                 object: self,
@@ -750,5 +750,5 @@ typealias InitialData = (
     self_entity: CLIENT_ENTITY,
     entities: [CLIENT_ENTITY],
     conversation_participants: [CLIENT_CONVERSATION_PARTICIPANT_DATA],
-    sync_timestamp: NSDate
+    sync_timestamp: NSDate?
 )

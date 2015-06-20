@@ -16,6 +16,7 @@ class ChatMessageView : NSTableCellView {
 
     var textLabel: NSTextField!
     var backgroundView: NSImageView!
+
     var orientation: Orientation = .Left
     static let font = NSFont.systemFontOfSize(13)
 
@@ -41,18 +42,15 @@ class ChatMessageView : NSTableCellView {
     }
 
     func configureWithMessage(message: ChatMessageEvent, user: User) {
-        orientation = user.is_self ? .Right : .Left
+        orientation = user.isSelf ? .Right : .Left
         textLabel.stringValue = message.text
-        textLabel.alignment = orientation == .Right ? .Right : .Left
-        //textLabel.lineBreakMode = .ByClipping
-        toolTip = message.text
         backgroundView.image = NSImage(named: orientation == .Right ? "gray_bubble_right" : "gray_bubble_left")
     }
 
 
     static let WidthPercentage: CGFloat = 0.75
     static let TextPointySideBorder: CGFloat = 8
-    static let TextRoundSideBorder: CGFloat = 2
+    static let TextRoundSideBorder: CGFloat = 4
     static let TextTopBorder: CGFloat = 4
     static let TextBottomBorder: CGFloat = 4
     static let VerticalTextPadding: CGFloat = 4
@@ -91,9 +89,9 @@ class ChatMessageView : NSTableCellView {
                 )
             case .Right:
                 textLabel.frame = NSRect(
-                    x: backgroundView.frame.origin.x + ChatMessageView.TextRoundSideBorder,
+                    x: backgroundView.frame.origin.x + ChatMessageView.TextPointySideBorder,
                     y: backgroundView.frame.origin.y + ChatMessageView.TextTopBorder - (ChatMessageView.VerticalTextPadding / 2),
-                    width: textSize.width,
+                    width: textSize.width - ChatMessageView.TextRoundSideBorder,
                     height: textSize.height + ChatMessageView.VerticalTextPadding / 2
                 )
             }

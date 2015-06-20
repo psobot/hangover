@@ -21,13 +21,25 @@ class ConversationListItemView : NSTableCellView {
         avatarView.layer?.cornerRadius = avatarView.frame.width / 2.0
         avatarView.layer?.masksToBounds = true
 
-        if let user = conversation.user_list.get_all().first,
-                photoURLString = user.photo_url,
-                photoURL = NSURL(string: photoURLString) {
-            avatarView.loadImageFromURL(photoURL)
+        let usersButNotMe = conversation.users.filter { !$0.isSelf }
+        if let user = usersButNotMe.first {
+            //  TODO: This is racey, fast scrolling can result in misplaced images
+            ImageCache.sharedInstance.fetchImage(forUser: user) {
+                self.avatarView.image = $0 ?? NSImage(named: "NSUserGuest")
+            }
+        } else {
+            avatarView.image = NSImage(named: "NSUserGuest")
         }
+
         nameView.stringValue = conversation.name
+
         lastMessageView.stringValue = conversation.messages.last?.text ?? ""
+        if conversation.hasUnreadEvents {
+            lastMessageView.font = NSFont.boldSystemFontOfSize(lastMessageView.font!.pointSize)
+        } else {
+            lastMessageView.font = NSFont.systemFontOfSize(lastMessageView.font!.pointSize)
+        }
+
         timeView.stringValue = conversation.messages.last?.timestamp.shortFormat() ?? ""
     }
 }

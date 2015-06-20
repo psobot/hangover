@@ -9,7 +9,7 @@
 import Cocoa
 import Alamofire
 
-class ConversationsViewController: NSViewController, ClientDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSplitViewDelegate {
+class ConversationsViewController: NSViewController, ClientDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSplitViewDelegate, ConversationListDelegate {
 
     @IBOutlet weak var conversationTableView: NSTableView!
     override func viewDidLoad() {
@@ -46,6 +46,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
     // MARK: Client Delegate
     var conversationList: ConversationList? {
         didSet {
+            conversationList?.delegate = self
             conversationTableView.reloadData()
         }
     }
@@ -146,6 +147,28 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
         // Resizing and placing the right view
         splitView.subviews[1].setFrameOrigin(NSMakePoint(leftViewSize.width + dividerThickness, 0))
         splitView.subviews[1].setFrameSize(rightViewSize)
+    }
+    
+    // MARK: ConversationListDelegate
+    func conversationList(list: ConversationList, didReceiveEvent event: ConversationEvent) {
+
+    }
+
+    func conversationList(list: ConversationList, didChangeTypingStatusTo status: TypingStatus) {
+
+    }
+
+    func conversationList(list: ConversationList, didReceiveWatermarkNotification status: WatermarkNotification) {
+
+    }
+
+    func conversationListDidUpdate(list: ConversationList) {
+        conversationTableView.reloadData()
+    }
+
+    func conversationList(list: ConversationList, didUpdateConversation conversation: Conversation) {
+        //  TODO: Just update the one row that needs updating
+        conversationTableView.reloadData()
     }
 
     // MARK: IBActions

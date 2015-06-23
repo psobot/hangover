@@ -146,7 +146,7 @@ class CLIENT_SET_FOCUS_NOTIFICATION : Message {
 
 class CLIENT_CONVERSATION_READ_STATE : Message {
     var participant_id = USER_ID()
-    var latest_read_timestamp: NSNumber = 0 // TODO: Verify this is an NSNumber
+    var latest_read_timestamp: NSDate = NSDate(timeIntervalSince1970: 0)
 }
 
 class CLIENT_CONVERSATION_INTERNAL_STATE : Message {
@@ -166,8 +166,8 @@ class CLIENT_CONVERSATION_INTERNAL_STATE : Message {
 
     var inviter_id = USER_ID()
     var invite_timestamp: NSString = ""
-    var sort_timestamp: NSNumber?
-    var active_timestamp: NSString?
+    var sort_timestamp: NSDate?
+    var active_timestamp: NSDate?
 
     var field7: OptionalField = nil
     var field8: OptionalField = nil
@@ -290,7 +290,7 @@ class CLIENT_EVENT_STATE : Message {
 class CLIENT_EVENT : Message {
     var conversation_id = CONVERSATION_ID()
     var sender_id: USER_ID?
-    var timestamp: NSNumber = 0
+    var timestamp: NSDate = NSDate(timeIntervalSince1970: 0)
     var self_event_state : CLIENT_EVENT_STATE?
     var field1: OptionalField = nil
     var field2: OptionalField = nil
@@ -300,7 +300,7 @@ class CLIENT_EVENT : Message {
     var conversation_rename: CLIENT_CONVERSATION_RENAME?
     var hangout_event: CLIENT_HANGOUT_EVENT?
     var event_id: NSString?
-    var advances_sort_timestamp: NSNumber?
+    var advances_sort_timestamp: NSDate?
     var otr_modification: CLIENT_OTR_MODIFICATION?
     var field4: OptionalField = nil
     var event_otr: OffTheRecordStatus = 0

@@ -180,7 +180,7 @@ class UserList : NSObject {
     }
 }
 
-func build_user_list(client: Client, initial_data: InitialData, cb: (UserList) -> Void) {
+func buildUserList(client: Client, initial_data: InitialData, cb: (UserList) -> Void) {
     // Return UserList from initial contact data and an additional request.
 
     // The initial data contains the user's contacts, but there may be conversions

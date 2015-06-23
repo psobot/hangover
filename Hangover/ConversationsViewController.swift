@@ -43,6 +43,14 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
         }
     }
 
+    func updateAppBadge() {
+        if let list = conversationList where list.unreadEventCount > 0 {
+            NSApplication.sharedApplication().dockTile.badgeLabel = "\(list.unreadEventCount)"
+        } else {
+            NSApplication.sharedApplication().dockTile.badgeLabel = ""
+        }
+    }
+
     // MARK: Client Delegate
     var conversationList: ConversationList? {
         didSet {
@@ -52,7 +60,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
     }
 
     func clientDidConnect(client: Client, initialData: InitialData) {
-        build_user_list(client, initial_data: initialData) { user_list in
+        buildUserList(client, initial_data: initialData) { user_list in
             print("Got user list: \(user_list)")
             self.conversationList = ConversationList(
                 client: client,
@@ -63,6 +71,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
             print("Conversation list: \(self.conversationList)")
             self.conversationTableView.reloadData()
             self.conversationTableView.selectRowIndexes(NSIndexSet(index: 0), byExtendingSelection: false)
+            self.conversationTableView.scrollRowToVisible(0)
         }
     }
 
@@ -80,12 +89,12 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
 
     // MARK: NSTableViewDataSource delegate
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
-        return conversationList?.conv_dict.count ?? 0
+        return conversationList?.conversations.count ?? 0
     }
 
     func tableViewSelectionDidChange(notification: NSNotification) {
         if conversationTableView.selectedRow >= 0 {
-            selectConversation(conversationList?.get_all()[conversationTableView.selectedRow])
+            selectConversation(conversationList?.conversations[conversationTableView.selectedRow])
         } else {
             selectConversation(nil)
         }
@@ -94,7 +103,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
     // MARK: NSTableViewDelegate
 
     func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        if let conversation = conversationList?.get_all()[row] {
+        if let conversation = conversationList?.conversations[row] {
             var view = tableView.makeViewWithIdentifier("ConversationListItemView", owner: self) as? ConversationListItemView
 
             if view == nil {
@@ -164,12 +173,15 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
 
     func conversationListDidUpdate(list: ConversationList) {
         conversationTableView.reloadData()
+        updateAppBadge()
     }
 
     func conversationList(list: ConversationList, didUpdateConversation conversation: Conversation) {
         //  TODO: Just update the one row that needs updating
         conversationTableView.reloadData()
+        updateAppBadge()
     }
+
 
     // MARK: IBActions
 

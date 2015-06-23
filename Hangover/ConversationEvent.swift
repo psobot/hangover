@@ -33,36 +33,28 @@ class ConversationEvent : Equatable {
         event = client_event
     }
 
-    var timestamp: NSDate {
-        get {
-            // A timestamp of when the event occurred.
-            return from_timestamp(self.event.timestamp)!
-        }
-    }
+    lazy var timestamp: NSDate = {
+        // A timestamp of when the event occurred.
+        return self.event.timestamp
+    }()
 
-    var user_id: UserID {
-        get {
-            // A UserID indicating who created the event.
-            return UserID(
-                chat_id: self.event.sender_id!.chat_id as String,
-                gaia_id: self.event.sender_id!.gaia_id as String
-            )
-        }
-    }
+    lazy var user_id: UserID = {
+        // A UserID indicating who created the event.
+        return UserID(
+            chat_id: self.event.sender_id!.chat_id as String,
+            gaia_id: self.event.sender_id!.gaia_id as String
+        )
+    }()
 
-    var conversation_id: NSString {
-        get {
-            // The ID of the conversation the event belongs to.
-            return self.event.conversation_id.id
-        }
-    }
+    lazy var conversation_id: NSString = {
+        // The ID of the conversation the event belongs to.
+        return self.event.conversation_id.id
+    }()
 
-    var id: Conversation.EventID {
-        get {
-            // The ID of the ConversationEvent.
-            return self.event.event_id! as Conversation.EventID
-        }
-    }
+    lazy var id: Conversation.EventID = {
+        // The ID of the ConversationEvent.
+        return self.event.event_id! as Conversation.EventID
+    }()
 }
 
 func ==(lhs: ConversationEvent, rhs: ConversationEvent) -> Bool {
@@ -141,37 +133,33 @@ class ChatMessageEvent : ConversationEvent {
     // An event containing a chat message.
     // Corresponds to ClientChatMessage in the API.
 
-    var text: String {
-        get {
-            // A textual representation of the message.
-            var lines = [""]
-            for segment in self.segments {
-                switch (segment.type) {
-                case SegmentType.TEXT, SegmentType.LINK:
-                    let replacement = lines.last! + segment.text
-                    lines.removeLast()
-                    lines.append(replacement)
-                case SegmentType.LINE_BREAK:
-                    lines.append("")
-                default:
-                    print("Ignoring unknown chat message segment type: \(segment.type.representation)")
-                }
+    lazy var text: String = {
+        // A textual representation of the message.
+        var lines = [""]
+        for segment in self.segments {
+            switch (segment.type) {
+            case SegmentType.TEXT, SegmentType.LINK:
+                let replacement = lines.last! + segment.text
+                lines.removeLast()
+                lines.append(replacement)
+            case SegmentType.LINE_BREAK:
+                lines.append("")
+            default:
+                print("Ignoring unknown chat message segment type: \(segment.type.representation)")
             }
-            lines += self.attachments
-            return "\n".join(lines)
         }
-    }
+        lines += self.attachments
+        return "\n".join(lines)
+    }()
 
-    var segments: [ChatMessageSegment] {
-        get {
-            // List of ChatMessageSegments in the message.
-            if let list = self.event.chat_message?.message_content.segment {
-                return list.map { ChatMessageSegment(segment: $0) }
-            } else {
-                return []
-            }
+    lazy var segments: [ChatMessageSegment] = {
+        // List of ChatMessageSegments in the message.
+        if let list = self.event.chat_message?.message_content.segment {
+            return list.map { ChatMessageSegment(segment: $0) }
+        } else {
+            return []
         }
-    }
+    }()
 
     var attachments: [String] {
         get {

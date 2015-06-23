@@ -20,7 +20,7 @@ protocol ConversationListDelegate {
 class ConversationList : ClientDelegate {
     // Wrapper around Client that maintains a list of Conversations
     let client: Client
-    var conv_dict = [String : Conversation]()
+    private var conv_dict = [String : Conversation]()
     var sync_timestamp: NSDate
     let user_list: UserList
 
@@ -40,18 +40,28 @@ class ConversationList : ClientDelegate {
         client.delegate = self
     }
 
-    func get_all(include_archived: Bool = false) -> [Conversation] {
-        // Return list of all Conversations.
-        // If include_archived is false, do not return any archived conversations.
-        let all = conv_dict.values.filter { !$0.is_archived || include_archived }
-        return all.sort({ (a, b) -> Bool in
-            a.last_modified.compare(b.last_modified) == NSComparisonResult.OrderedDescending
-        })
+    var conversations: [Conversation] {
+        get {
+            let all = conv_dict.values.filter { !$0.is_archived }
+            return all.sort { $0.last_modified > $1.last_modified }
+        }
+    }
+
+    var all_conversations: [Conversation] {
+        get {
+            return conv_dict.values.sort { $0.last_modified > $1.last_modified }
+        }
     }
 
     func get(conv_id: String) -> Conversation? {
         // Return a Conversation from its ID.
         return conv_dict[conv_id]
+    }
+
+    var unreadEventCount: Int {
+        get {
+            return conversations.flatMap { $0.unread_events }.count
+        }
     }
 
     func add_conversation(
@@ -82,7 +92,7 @@ class ConversationList : ClientDelegate {
 
     func on_client_event(event: CLIENT_EVENT) {
         // Receive a ClientEvent and fan out to Conversations
-        sync_timestamp = from_timestamp(event.timestamp)
+        sync_timestamp = event.timestamp
         if let conv = conv_dict[event.conversation_id.id as String] {
             let conv_event = conv.add_event(event)
 
@@ -143,8 +153,7 @@ class ConversationList : ClientDelegate {
                     if let conv = self.conv_dict[conv_state.conversation_id.id as String] {
                         conv.update_conversation(conv_state.conversation)
                         for event in conv_state.event {
-                            let timestamp = from_timestamp(event.timestamp)
-                            if timestamp.compare(self.sync_timestamp) == NSComparisonResult.OrderedDescending {
+                            if event.timestamp > self.sync_timestamp {
                                 // This updates the sync_timestamp for us, as well
                                 // as triggering events.
                                 self.on_client_event(event)

@@ -28,8 +28,11 @@ class Conversation {
     var client: Client
     var user_list: UserList
     var conversation: CLIENT_CONVERSATION
-    var events = [ConversationEvent]()
-    var events_dict = Dictionary<EventID, ConversationEvent>()
+    var events_dict: Dictionary<EventID, ConversationEvent> = Dictionary<EventID, ConversationEvent>() {
+        didSet {
+            self._cachedEvents = nil
+        }
+    }
     var typingStatuses = Dictionary<UserID, TypingStatus>()
 
     var delegate: ConversationDelegate?
@@ -55,7 +58,7 @@ class Conversation {
         // Update the conversations latest_read_timestamp.
         if self.get_user(notif.user_id).isSelf {
             print("latest_read_timestamp for \(self.id) updated to \(notif.read_timestamp)")
-            self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = to_timestamp(notif.read_timestamp)
+            self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = notif.read_timestamp
         }
     }
 
@@ -69,9 +72,7 @@ class Conversation {
         self.conversation = client_conversation
         
         if to_timestamp(self.latest_read_timestamp) == 0 {
-            self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = (
-                to_timestamp(old_timestamp)
-            )
+            self.conversation.self_conversation_state.self_read_state.latest_read_timestamp = old_timestamp
         }
 
         delegate?.conversationDidUpdate(self)
@@ -90,11 +91,20 @@ class Conversation {
         }
     }
 
+    private var _cachedEvents = [ConversationEvent]?()
+    var events: [ConversationEvent] {
+        get {
+            if _cachedEvents == nil {
+                _cachedEvents = events_dict.values.sort { $0.timestamp < $1.timestamp }
+            }
+            return _cachedEvents!
+        }
+    }
+
     func add_event(event: CLIENT_EVENT) -> ConversationEvent {
         // Add a ClientEvent to the Conversation.
         // Returns an instance of ConversationEvent or subclass.
         let conv_event = Conversation.wrap_event(event)
-        self.events.append(conv_event)
         self.events_dict[conv_event.id] = conv_event
         return conv_event
     }
@@ -203,7 +213,7 @@ class Conversation {
             read_timestamp = self.events.last!.timestamp
         }
         if let new_read_timestamp = read_timestamp {
-            if new_read_timestamp.compare(self.latest_read_timestamp) == NSComparisonResult.OrderedDescending {
+            if new_read_timestamp > self.latest_read_timestamp {
                 print("Setting \(id) latest_read_timestamp from \(latest_read_timestamp) to \(read_timestamp)")
 
                 // Prevent duplicate requests by updating the conversation now.
@@ -274,7 +284,6 @@ class Conversation {
                 print("Loaded \(conv_events.count) events for conversation \(self.id)")
 
                 for conv_event in conv_events {
-                    self.events.insert(conv_event, atIndex: 0)
                     self.events_dict[conv_event.id] = conv_event
                 }
                 cb?(conv_events)
@@ -337,17 +346,17 @@ class Conversation {
 
     var last_modified: NSDate {
         get {
-            return from_timestamp(conversation.self_conversation_state.sort_timestamp)!
+            return conversation.self_conversation_state.sort_timestamp!
         }
     }
 
     var latest_read_timestamp: NSDate {
         get {
             // datetime timestamp of the last read ConversationEvent.
-            return from_timestamp(conversation.self_conversation_state.self_read_state.latest_read_timestamp)
+            return conversation.self_conversation_state.self_read_state.latest_read_timestamp
         }
         set(newLatestReadTimestamp) {
-            conversation.self_conversation_state.self_read_state.latest_read_timestamp = to_timestamp(newLatestReadTimestamp)
+            conversation.self_conversation_state.self_read_state.latest_read_timestamp = newLatestReadTimestamp
         }
     }
 
@@ -362,7 +371,7 @@ class Conversation {
             // return more unread events than these clients will show. There's also a
             // delay between sending a message and the user's own message being
             // considered read.
-            return events.filter { $0.timestamp.compare(self.latest_read_timestamp) == .OrderedDescending }
+            return events.filter { $0.timestamp > self.latest_read_timestamp }
         }
     }
 

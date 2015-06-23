@@ -84,6 +84,20 @@ func getArrayEnumType(arr: Any) -> Enum.Type? {
     return nil
 }
 
+func valueWithTypeCoercion(
+    property: Any,
+    value: AnyObject?
+) -> AnyObject? {
+    //  Hacky, but if we're doing this at runtime, we don't get Swift's nice implicit Convertables.
+    if property is NSDate || unwrapOptionalType(property) is NSDate.Type {
+        if let number = value as? NSNumber {
+            let timestampAsDate = from_timestamp(number)
+            return timestampAsDate
+        }
+    }
+    return value
+}
+
 class Message : NSObject {
     required override init() { }
     class func isOptional() -> Bool { return false }
@@ -138,7 +152,7 @@ class Message : NSObject {
                             let val = (arr[i] as! NSArray).map { elementType(value: ($0 as! NSNumber)) }
                             instance.setValue(val, forKey:propertyName)
                         } else {
-                            instance.setValue(arr[i], forKey: propertyName)
+                            instance.setValue(valueWithTypeCoercion(property, value: arr[i]), forKey:propertyName)
                         }
                     }
                 }
@@ -200,7 +214,7 @@ class Message : NSObject {
                         let val = (value as! NSArray).map { elementType(value: ($0 as! NSNumber)) }
                         instance.setValue(val, forKey:propertyName)
                     } else {
-                        instance.setValue(value, forKey: propertyName)
+                        instance.setValue(valueWithTypeCoercion(property, value: value), forKey: propertyName)
                     }
                 }
             }

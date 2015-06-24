@@ -170,7 +170,7 @@ class ConversationViewController:
                 view!.identifier = ChatMessageView.className()
             }
 
-            view!.configureWithMessage(message, user: user)
+            view!.configureWithMessage(message.text, orientation: user.isSelf ? .Right : .Left)
             return view
         }
 
@@ -182,7 +182,7 @@ class ConversationViewController:
                 view!.identifier = ChatTypingView.className()
             }
 
-            view!.configureWithTypingStatus(TypingStatus.TYPING)
+            view!.configureWithTypingStatus()
             return view
         }
 

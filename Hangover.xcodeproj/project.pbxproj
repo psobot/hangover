@@ -63,10 +63,27 @@
 		339576C41B26A52800D1E555 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 339576C21B26A47F00D1E555 /* Data */; };
 		339576C61B27BE3F00D1E555 /* ConversationList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576C51B27BE3F00D1E555 /* ConversationList.swift */; };
 		339576CA1B27DE0E00D1E555 /* ConversationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576C91B27DE0E00D1E555 /* ConversationViewController.swift */; };
+		33A188F11B3A44680077D5FA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A188F01B3A44680077D5FA /* AppDelegate.swift */; };
+		33A188F31B3A44680077D5FA /* SandboxViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A188F21B3A44680077D5FA /* SandboxViewController.swift */; };
+		33A188F51B3A44680077D5FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33A188F41B3A44680077D5FA /* Assets.xcassets */; };
+		33A188F81B3A44680077D5FA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 33A188F61B3A44680077D5FA /* Main.storyboard */; };
+		33A188FE1B3A44C10077D5FA /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C1C4D61B294BD600A572E7 /* ChatMessageView.swift */; };
+		33A188FF1B3A44CA0077D5FA /* ChatTypingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FE011B34E73100024123 /* ChatTypingView.swift */; };
+		33A1890F1B3A44E30077D5FA /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
+		33A189101B3A44E30077D5FA /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */; };
+		33A189111B3A44E30077D5FA /* Dictionary+Swifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338983891B201263009BB5BC /* Dictionary+Swifter.swift */; };
+		33A189121B3A44E30077D5FA /* TupleComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576B81B2679EF00D1E555 /* TupleComparison.swift */; };
+		33A189131B3A44E30077D5FA /* NSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333AF2A91B2954B5005098D1 /* NSView.swift */; };
+		33A189141B3A44E30077D5FA /* NSDate+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333AF2AF1B2A9263005098D1 /* NSDate+Extensions.swift */; };
+		33A189151B3A44E70077D5FA /* Delay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3320A6EA1B24E65F00F83B81 /* Delay.swift */; };
+		33A189161B3A44E70077D5FA /* Power.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576BF1B269E6D00D1E555 /* Power.swift */; };
+		33A189181B3A4E0B0077D5FA /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33368DBF1B12ACD4009B28B2 /* Images.xcassets */; };
 		33C1C4D71B294BD600A572E7 /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C1C4D61B294BD600A572E7 /* ChatMessageView.swift */; };
 		33C4FE001B34E48B00024123 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FDFF1B34E48B00024123 /* Secrets.swift */; };
 		33C4FE021B34E73100024123 /* ChatTypingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FE011B34E73100024123 /* ChatTypingView.swift */; };
 		33C4FE031B34E83F00024123 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FDFF1B34E48B00024123 /* Secrets.swift */; };
+		33C8F90F1B3A77C400D2BE5C /* ChatMessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */; };
+		33C8F9101B3A77C400D2BE5C /* ChatMessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */; };
 		33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */; };
 		33E9F5C41B1A2CFE0027F7EC /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5C31B1A2CFE0027F7EC /* Regex.swift */; };
 		33E9F5C51B1A37770027F7EC /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5B1B153E5200C81DC3 /* Channel.swift */; };
@@ -174,9 +191,16 @@
 		339576C21B26A47F00D1E555 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
 		339576C51B27BE3F00D1E555 /* ConversationList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationList.swift; sourceTree = "<group>"; };
 		339576C91B27DE0E00D1E555 /* ConversationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationViewController.swift; sourceTree = "<group>"; };
+		33A188EE1B3A44680077D5FA /* Hangover UI Sandbox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hangover UI Sandbox.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		33A188F01B3A44680077D5FA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		33A188F21B3A44680077D5FA /* SandboxViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandboxViewController.swift; sourceTree = "<group>"; };
+		33A188F41B3A44680077D5FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		33A188F71B3A44680077D5FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		33A188F91B3A44680077D5FA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		33C1C4D61B294BD600A572E7 /* ChatMessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
 		33C4FDFF1B34E48B00024123 /* Secrets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		33C4FE011B34E73100024123 /* ChatTypingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatTypingView.swift; sourceTree = "<group>"; };
+		33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ChatMessageView.xib; sourceTree = "<group>"; };
 		33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Extensions.swift"; sourceTree = "<group>"; };
 		33E9F5BF1B1A1D9F0027F7EC /* Hangover-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Hangover-Bridging-Header.h"; sourceTree = "<group>"; };
 		33E9F5C31B1A2CFE0027F7EC /* Regex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
@@ -203,6 +227,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		33A188EB1B3A44680077D5FA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -220,6 +251,7 @@
 			children = (
 				33368DB81B12ACD4009B28B2 /* Hangover */,
 				33368DCB1B12ACD4009B28B2 /* HangoverTests */,
+				33A188EF1B3A44680077D5FA /* Hangover UI Sandbox */,
 				33368DB71B12ACD4009B28B2 /* Products */,
 				86272A5E8E455B327B105456 /* Pods */,
 				436130E2D699EC081568747A /* Frameworks */,
@@ -232,6 +264,7 @@
 			children = (
 				33368DB61B12ACD4009B28B2 /* Hangover.app */,
 				33368DC81B12ACD4009B28B2 /* HangoverTests.xctest */,
+				33A188EE1B3A44680077D5FA /* Hangover UI Sandbox.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -300,11 +333,24 @@
 			name = Extensions;
 			sourceTree = "<group>";
 		};
+		33A188EF1B3A44680077D5FA /* Hangover UI Sandbox */ = {
+			isa = PBXGroup;
+			children = (
+				33A188F01B3A44680077D5FA /* AppDelegate.swift */,
+				33A188F21B3A44680077D5FA /* SandboxViewController.swift */,
+				33A188F41B3A44680077D5FA /* Assets.xcassets */,
+				33A188F61B3A44680077D5FA /* Main.storyboard */,
+				33A188F91B3A44680077D5FA /* Info.plist */,
+			);
+			path = "Hangover UI Sandbox";
+			sourceTree = "<group>";
+		};
 		33C1C4D31B294B7A00A572E7 /* Storyboards */ = {
 			isa = PBXGroup;
 			children = (
 				33368DC11B12ACD4009B28B2 /* Main.storyboard */,
 				333AF2AB1B2A7B54005098D1 /* ConversationListItemView.xib */,
+				33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */,
 			);
 			name = Storyboards;
 			sourceTree = "<group>";
@@ -424,6 +470,23 @@
 			productReference = 33368DC81B12ACD4009B28B2 /* HangoverTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		33A188ED1B3A44680077D5FA /* Hangover UI Sandbox */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33A188FA1B3A44680077D5FA /* Build configuration list for PBXNativeTarget "Hangover UI Sandbox" */;
+			buildPhases = (
+				33A188EA1B3A44680077D5FA /* Sources */,
+				33A188EB1B3A44680077D5FA /* Frameworks */,
+				33A188EC1B3A44680077D5FA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Hangover UI Sandbox";
+			productName = "Hangover UI Sandbox";
+			productReference = 33A188EE1B3A44680077D5FA /* Hangover UI Sandbox.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -436,10 +499,14 @@
 				TargetAttributes = {
 					33368DB51B12ACD4009B28B2 = {
 						CreatedOnToolsVersion = 6.3.2;
+						DevelopmentTeam = Y553XM9C94;
 					};
 					33368DC71B12ACD4009B28B2 = {
 						CreatedOnToolsVersion = 6.3.2;
 						TestTargetID = 33368DB51B12ACD4009B28B2;
+					};
+					33A188ED1B3A44680077D5FA = {
+						CreatedOnToolsVersion = 7.0;
 					};
 				};
 			};
@@ -464,6 +531,7 @@
 			targets = (
 				33368DB51B12ACD4009B28B2 /* Hangover */,
 				33368DC71B12ACD4009B28B2 /* HangoverTests */,
+				33A188ED1B3A44680077D5FA /* Hangover UI Sandbox */,
 			);
 		};
 /* End PBXProject section */
@@ -513,6 +581,7 @@
 			files = (
 				33368DC01B12ACD4009B28B2 /* Images.xcassets in Resources */,
 				33368DC31B12ACD4009B28B2 /* Main.storyboard in Resources */,
+				33C8F90F1B3A77C400D2BE5C /* ChatMessageView.xib in Resources */,
 				339576C41B26A52800D1E555 /* Data in Resources */,
 				333AF2AC1B2A7B54005098D1 /* ConversationListItemView.xib in Resources */,
 				33000E711B35E847008C0A31 /* notification.wav in Resources */,
@@ -524,6 +593,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				339576C31B26A47F00D1E555 /* Data in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33A188EC1B3A44680077D5FA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33C8F9101B3A77C400D2BE5C /* ChatMessageView.xib in Resources */,
+				33A189181B3A4E0B0077D5FA /* Images.xcassets in Resources */,
+				33A188F51B3A44680077D5FA /* Assets.xcassets in Resources */,
+				33A188F81B3A44680077D5FA /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -695,6 +775,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		33A188EA1B3A44680077D5FA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33A189121B3A44E30077D5FA /* TupleComparison.swift in Sources */,
+				33A189101B3A44E30077D5FA /* String+Extensions.swift in Sources */,
+				33A1890F1B3A44E30077D5FA /* NSString+SHA1.m in Sources */,
+				33A188FE1B3A44C10077D5FA /* ChatMessageView.swift in Sources */,
+				33A189141B3A44E30077D5FA /* NSDate+Extensions.swift in Sources */,
+				33A188FF1B3A44CA0077D5FA /* ChatTypingView.swift in Sources */,
+				33A188F31B3A44680077D5FA /* SandboxViewController.swift in Sources */,
+				33A189131B3A44E30077D5FA /* NSView.swift in Sources */,
+				33A188F11B3A44680077D5FA /* AppDelegate.swift in Sources */,
+				33A189111B3A44E30077D5FA /* Dictionary+Swifter.swift in Sources */,
+				33A189161B3A44E70077D5FA /* Power.swift in Sources */,
+				33A189151B3A44E70077D5FA /* Delay.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -710,6 +809,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				33368DC21B12ACD4009B28B2 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		33A188F61B3A44680077D5FA /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				33A188F71B3A44680077D5FA /* Base */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -753,6 +860,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -792,6 +900,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -885,6 +994,31 @@
 			};
 			name = Release;
 		};
+		33A188FB1B3A44680077D5FA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_TESTABILITY = YES;
+				INFOPLIST_FILE = "Hangover UI Sandbox/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.petersobot.Hangover-UI-Sandbox";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		33A188FC1B3A44680077D5FA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "Hangover UI Sandbox/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.petersobot.Hangover-UI-Sandbox";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -911,6 +1045,15 @@
 			buildConfigurations = (
 				33368DD61B12ACD4009B28B2 /* Debug */,
 				33368DD71B12ACD4009B28B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33A188FA1B3A44680077D5FA /* Build configuration list for PBXNativeTarget "Hangover UI Sandbox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33A188FB1B3A44680077D5FA /* Debug */,
+				33A188FC1B3A44680077D5FA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

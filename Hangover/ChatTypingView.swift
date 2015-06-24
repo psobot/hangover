@@ -31,7 +31,7 @@ class ChatTypingView : NSTableCellView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configureWithTypingStatus(status: TypingStatus) {
+    func configureWithTypingStatus() {
         orientation = .Left
         backgroundView.image = NSImage(named: orientation == .Right ? "gray_bubble_right" : "gray_bubble_left")
     }

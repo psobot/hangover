@@ -13,10 +13,11 @@ class SandboxViewController: NSViewController, NSTableViewDataSource, NSTableVie
     @IBOutlet weak var conversationTableView: NSTableView!
 
     let messages = [
-//        ("Oh hey, person number 1.", ChatMessageView.Orientation.Left),
-//        ("Hey person number 2, what's up?", ChatMessageView.Orientation.Right),
-//        ("Not all that much, just testing out this chat client.", ChatMessageView.Orientation.Left),
+        ("Oh hey, person number 1.", ChatMessageView.Orientation.Left),
+        ("Hey person number 2, what's up?", ChatMessageView.Orientation.Right),
+        ("Not all that much, just testing out this chat client.", ChatMessageView.Orientation.Left),
         ("Coooooooooool beans. Will this longer message wrap onto multiple lines and possibly cause any issues?", ChatMessageView.Orientation.Right),
+        ("Here's an emoji: 😄.", ChatMessageView.Orientation.Left),
     ]
 
     override func viewDidAppear() {

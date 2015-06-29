@@ -14,6 +14,7 @@ class ChatMessageView : NSView {
         case Right
     }
 
+    var string: NSAttributedString?
     var textLabel: NSTextField!
     var backgroundView: NSImageView!
 
@@ -23,19 +24,18 @@ class ChatMessageView : NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
 
-//        backgroundView = NSImageView(frame: NSZeroRect)
-//        backgroundView.imageScaling = .ScaleAxesIndependently
-//        backgroundView.image = NSImage(named: "gray_bubble_left")
-//        addSubview(backgroundView)
+        backgroundView = NSImageView(frame: NSZeroRect)
+        backgroundView.imageScaling = .ScaleAxesIndependently
+        backgroundView.image = NSImage(named: "gray_bubble_left")
+        addSubview(backgroundView)
 
         textLabel = NSTextField(frame: NSZeroRect)
-        textLabel.drawsBackground = true
-        textLabel.backgroundColor = NSColor(calibratedRed: 1.0, green: 0.0, blue: 0.0, alpha: 0.2)
         textLabel.bezeled = false
         textLabel.bordered = false
         textLabel.editable = false
-        //textLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
-        textLabel.font = ChatMessageView.font
+        textLabel.drawsBackground = false
+        textLabel.allowsEditingTextAttributes = true
+        textLabel.selectable = true
         addSubview(textLabel)
     }
 
@@ -45,29 +45,30 @@ class ChatMessageView : NSView {
 
     func configureWithText(string: String, orientation: Orientation) {
         self.orientation = orientation
-        textLabel.alignment = (orientation == .Left) ? .Left : .Right
-        textLabel.stringValue = string
-        //backgroundView.image = NSImage(named: orientation == .Right ? "gray_bubble_right" : "gray_bubble_left")
+        self.string = TextMapper.attributedStringForText(string)
+        textLabel.attributedStringValue = self.string!
+        backgroundView.image = NSImage(named: orientation == .Right ? "gray_bubble_right" : "gray_bubble_left")
     }
 
-    static let WidthPercentage: CGFloat = 1//0.75
-    static let TextPointySideBorder: CGFloat = 0//8
-    static let TextRoundSideBorder: CGFloat = 0//4
-    static let TextTopBorder: CGFloat = 0//4
-    static let TextBottomBorder: CGFloat = 0//4
-    static let VerticalTextPadding: CGFloat = 0//4
+    static let WidthPercentage: CGFloat = 0.75
+    static let TextPointySideBorder: CGFloat = 12
+    static let TextRoundSideBorder: CGFloat = 8
+    static let TextTopBorder: CGFloat = 4
+    static let TextBottomBorder: CGFloat = 4
+    static let VerticalTextPadding: CGFloat = 4
+    static let HorizontalTextMeasurementPadding: CGFloat = 5
 
     override var frame: NSRect {
         didSet {
-            self.textLabel.frame = frame
-            return
             var backgroundFrame = frame
-
 
             backgroundFrame.size.width *= ChatMessageView.WidthPercentage
 
             let textMaxWidth = ChatMessageView.widthOfText(backgroundWidth: backgroundFrame.size.width)
-            let textSize = ChatMessageView.textSizeInWidth(self.textLabel.stringValue, width: textMaxWidth - 5)
+            let textSize = ChatMessageView.textSizeInWidth(
+                self.textLabel.attributedStringValue,
+                width: textMaxWidth
+            )
 
             backgroundFrame.size.width = ChatMessageView.widthOfBackground(textWidth: textSize.width)
 
@@ -90,7 +91,7 @@ class ChatMessageView : NSView {
                 )
             case .Right:
                 textLabel.frame = NSRect(
-                    x: backgroundView.frame.origin.x + ChatMessageView.TextPointySideBorder,
+                    x: backgroundView.frame.origin.x + ChatMessageView.TextRoundSideBorder,
                     y: backgroundView.frame.origin.y + ChatMessageView.TextTopBorder - (ChatMessageView.VerticalTextPadding / 2),
                     width: textSize.width,
                     height: textSize.height + ChatMessageView.VerticalTextPadding / 2
@@ -100,36 +101,32 @@ class ChatMessageView : NSView {
     }
 
     class func widthOfText(backgroundWidth backgroundWidth: CGFloat) -> CGFloat {
-        return backgroundWidth - ChatMessageView.TextRoundSideBorder - ChatMessageView.TextPointySideBorder
+        return backgroundWidth
+            - ChatMessageView.TextRoundSideBorder
+            - ChatMessageView.TextPointySideBorder
     }
 
     class func widthOfBackground(textWidth textWidth: CGFloat) -> CGFloat {
-        return textWidth + ChatMessageView.TextRoundSideBorder + ChatMessageView.TextPointySideBorder
+        return textWidth
+            + ChatMessageView.TextRoundSideBorder
+            + ChatMessageView.TextPointySideBorder
     }
 
-    class func textSizeInWidth(text: String, width: CGFloat) -> CGSize {
-//        let textStorage = NSTextStorage(string: text)
-//        let textContainer = NSTextContainer(containerSize: NSMakeSize(width, CGFloat.max))
-//        let layoutManager = NSLayoutManager()
-//        layoutManager.addTextContainer(textContainer)
-//        textStorage.addLayoutManager(layoutManager)
-//        textStorage.addAttribute(NSFontAttributeName, value:font, range:NSMakeRange(0, textStorage.length))
-//        layoutManager.glyphRangeForTextContainer(textContainer)
-//        return layoutManager.usedRectForTextContainer(textContainer).size
-        return NSAttributedString(
-            string: text,
-            attributes: [NSFontAttributeName: font]
-        ).boundingRectWithSize(
+    class func textSizeInWidth(text: NSAttributedString, width: CGFloat) -> CGSize {
+        var size = text.boundingRectWithSize(
             NSMakeSize(width, 0),
-            options: [.UsesDeviceMetrics, .UsesLineFragmentOrigin, .UsesFontLeading]
+            options: [
+                NSStringDrawingOptions.UsesLineFragmentOrigin,
+                NSStringDrawingOptions.UsesFontLeading
+            ]
         ).size
+        size.width += HorizontalTextMeasurementPadding
+        return size
     }
 
-    class func heightForContainerWidth(text: String, width: CGFloat) -> CGFloat {
+    class func heightForContainerWidth(text: NSAttributedString, width: CGFloat) -> CGFloat {
         let size = textSizeInWidth(text, width: widthOfText(backgroundWidth: (width * WidthPercentage)))
-        Swift.print("Size of text in width \(width): \(size)")
         let height = size.height + TextTopBorder + TextBottomBorder
-        Swift.print("Height of in width \(width): \(height)")
         return height
     }
 }

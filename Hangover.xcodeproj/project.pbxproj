@@ -47,6 +47,10 @@
 		33405A701B1E817400C81DC3 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A6E1B1E6EB800C81DC3 /* Schema.swift */; };
 		33806E271B1A6875007C6BE4 /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
 		33806E281B1A6875007C6BE4 /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 33806E261B1A6875007C6BE4 /* NSString+SHA1.m */; };
+		338929861B407FB40067FE09 /* Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338929851B407FB40067FE09 /* Emoji.swift */; };
+		3389298D1B40E6560067FE09 /* TextMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3389298C1B40E6560067FE09 /* TextMapper.swift */; };
+		3389298E1B40E6560067FE09 /* TextMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3389298C1B40E6560067FE09 /* TextMapper.swift */; };
+		3389298F1B40ECF20067FE09 /* Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338929851B407FB40067FE09 /* Emoji.swift */; };
 		3389838A1B201263009BB5BC /* Dictionary+Swifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338983891B201263009BB5BC /* Dictionary+Swifter.swift */; };
 		3389838B1B201467009BB5BC /* Dictionary+Swifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338983891B201263009BB5BC /* Dictionary+Swifter.swift */; };
 		339576B51B26668D00D1E555 /* ConversationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 339576B41B26668D00D1E555 /* ConversationEvent.swift */; };
@@ -82,8 +86,9 @@
 		33C4FE001B34E48B00024123 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FDFF1B34E48B00024123 /* Secrets.swift */; };
 		33C4FE021B34E73100024123 /* ChatTypingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FE011B34E73100024123 /* ChatTypingView.swift */; };
 		33C4FE031B34E83F00024123 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4FDFF1B34E48B00024123 /* Secrets.swift */; };
-		33C8F90F1B3A77C400D2BE5C /* ChatMessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */; };
-		33C8F9101B3A77C400D2BE5C /* ChatMessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */; };
+		33C638F81B3BCFB000E8C0C7 /* MeasureTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C638F71B3BCFB000E8C0C7 /* MeasureTextField.swift */; };
+		33C639001B3CBC7800E8C0C7 /* TextMeasurementViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C638FF1B3CBC7800E8C0C7 /* TextMeasurementViewController.swift */; };
+		33C639021B3F364100E8C0C7 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33C639011B3F364000E8C0C7 /* CoreText.framework */; };
 		33E9F5BD1B1A1D4A0027F7EC /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */; };
 		33E9F5C41B1A2CFE0027F7EC /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E9F5C31B1A2CFE0027F7EC /* Regex.swift */; };
 		33E9F5C51B1A37770027F7EC /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33405A5B1B153E5200C81DC3 /* Channel.swift */; };
@@ -183,6 +188,8 @@
 		33806E241B1A6875007C6BE4 /* HangoverTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HangoverTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		33806E251B1A6875007C6BE4 /* NSString+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+SHA1.h"; sourceTree = "<group>"; };
 		33806E261B1A6875007C6BE4 /* NSString+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+SHA1.m"; sourceTree = "<group>"; };
+		338929851B407FB40067FE09 /* Emoji.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Emoji.swift; sourceTree = "<group>"; };
+		3389298C1B40E6560067FE09 /* TextMapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextMapper.swift; sourceTree = "<group>"; };
 		338983891B201263009BB5BC /* Dictionary+Swifter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Dictionary+Swifter.swift"; sourceTree = "<group>"; };
 		339576B41B26668D00D1E555 /* ConversationEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationEvent.swift; sourceTree = "<group>"; };
 		339576B61B26768700D1E555 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
@@ -200,7 +207,9 @@
 		33C1C4D61B294BD600A572E7 /* ChatMessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
 		33C4FDFF1B34E48B00024123 /* Secrets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		33C4FE011B34E73100024123 /* ChatTypingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatTypingView.swift; sourceTree = "<group>"; };
-		33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ChatMessageView.xib; sourceTree = "<group>"; };
+		33C638F71B3BCFB000E8C0C7 /* MeasureTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MeasureTextField.swift; sourceTree = "<group>"; };
+		33C638FF1B3CBC7800E8C0C7 /* TextMeasurementViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextMeasurementViewController.swift; sourceTree = "<group>"; };
+		33C639011B3F364000E8C0C7 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		33E9F5BC1B1A1D4A0027F7EC /* String+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Extensions.swift"; sourceTree = "<group>"; };
 		33E9F5BF1B1A1D9F0027F7EC /* Hangover-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Hangover-Bridging-Header.h"; sourceTree = "<group>"; };
 		33E9F5C31B1A2CFE0027F7EC /* Regex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
@@ -231,6 +240,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33C639021B3F364100E8C0C7 /* CoreText.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +252,8 @@
 			children = (
 				33000E721B35E885008C0A31 /* NotificationManager.swift */,
 				33000E751B35EA13008C0A31 /* ImageCache.swift */,
+				338929851B407FB40067FE09 /* Emoji.swift */,
+				3389298C1B40E6560067FE09 /* TextMapper.swift */,
 			);
 			name = Helpers;
 			sourceTree = "<group>";
@@ -338,6 +350,8 @@
 			children = (
 				33A188F01B3A44680077D5FA /* AppDelegate.swift */,
 				33A188F21B3A44680077D5FA /* SandboxViewController.swift */,
+				33C638FF1B3CBC7800E8C0C7 /* TextMeasurementViewController.swift */,
+				33C638F71B3BCFB000E8C0C7 /* MeasureTextField.swift */,
 				33A188F41B3A44680077D5FA /* Assets.xcassets */,
 				33A188F61B3A44680077D5FA /* Main.storyboard */,
 				33A188F91B3A44680077D5FA /* Info.plist */,
@@ -350,7 +364,6 @@
 			children = (
 				33368DC11B12ACD4009B28B2 /* Main.storyboard */,
 				333AF2AB1B2A7B54005098D1 /* ConversationListItemView.xib */,
-				33C8F90E1B3A77C400D2BE5C /* ChatMessageView.xib */,
 			);
 			name = Storyboards;
 			sourceTree = "<group>";
@@ -411,6 +424,7 @@
 		436130E2D699EC081568747A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				33C639011B3F364000E8C0C7 /* CoreText.framework */,
 				71000E92426D15A973A8610C /* Pods.framework */,
 			);
 			name = Frameworks;
@@ -581,7 +595,6 @@
 			files = (
 				33368DC01B12ACD4009B28B2 /* Images.xcassets in Resources */,
 				33368DC31B12ACD4009B28B2 /* Main.storyboard in Resources */,
-				33C8F90F1B3A77C400D2BE5C /* ChatMessageView.xib in Resources */,
 				339576C41B26A52800D1E555 /* Data in Resources */,
 				333AF2AC1B2A7B54005098D1 /* ConversationListItemView.xib in Resources */,
 				33000E711B35E847008C0A31 /* notification.wav in Resources */,
@@ -600,7 +613,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				33C8F9101B3A77C400D2BE5C /* ChatMessageView.xib in Resources */,
 				33A189181B3A4E0B0077D5FA /* Images.xcassets in Resources */,
 				33A188F51B3A44680077D5FA /* Assets.xcassets in Resources */,
 				33A188F81B3A44680077D5FA /* Main.storyboard in Resources */,
@@ -733,9 +745,11 @@
 				33C4FE001B34E48B00024123 /* Secrets.swift in Sources */,
 				333AF2AE1B2A7BC3005098D1 /* ConversationListItemView.swift in Sources */,
 				333AF2B91B2BDF28005098D1 /* MainSplitView.swift in Sources */,
+				338929861B407FB40067FE09 /* Emoji.swift in Sources */,
 				339576B71B26768700D1E555 /* User.swift in Sources */,
 				33405A601B1C0B0800C81DC3 /* Manager.swift in Sources */,
 				3389838A1B201263009BB5BC /* Dictionary+Swifter.swift in Sources */,
+				3389298D1B40E6560067FE09 /* TextMapper.swift in Sources */,
 				339576CA1B27DE0E00D1E555 /* ConversationViewController.swift in Sources */,
 				33405A661B1D3D6C00C81DC3 /* LoginViewController.swift in Sources */,
 			);
@@ -751,6 +765,7 @@
 				33405A701B1E817400C81DC3 /* Schema.swift in Sources */,
 				33E9F5C61B1A37790027F7EC /* String+Extensions.swift in Sources */,
 				33E9F5CB1B1A3A930027F7EC /* ChannelTests.swift in Sources */,
+				3389298F1B40ECF20067FE09 /* Emoji.swift in Sources */,
 				33000E781B35F12A008C0A31 /* NotificationManager.swift in Sources */,
 				333AF2B31B2B8414005098D1 /* NSDate+ExtensionsTests.swift in Sources */,
 				3320A6EF1B25410B00F83B81 /* Conversation.swift in Sources */,
@@ -758,6 +773,7 @@
 				33E9F5C71B1A377B0027F7EC /* Regex.swift in Sources */,
 				33000E771B35ECD6008C0A31 /* ImageCache.swift in Sources */,
 				33368DCF1B12ACD4009B28B2 /* HangoverTests.swift in Sources */,
+				3389298E1B40E6560067FE09 /* TextMapper.swift in Sources */,
 				339576BB1B267B4200D1E555 /* User.swift in Sources */,
 				33E9F5C51B1A37770027F7EC /* Channel.swift in Sources */,
 				33368DDA1B12B5C4009B28B2 /* PBLite.swift in Sources */,
@@ -789,8 +805,10 @@
 				33A189131B3A44E30077D5FA /* NSView.swift in Sources */,
 				33A188F11B3A44680077D5FA /* AppDelegate.swift in Sources */,
 				33A189111B3A44E30077D5FA /* Dictionary+Swifter.swift in Sources */,
+				33C639001B3CBC7800E8C0C7 /* TextMeasurementViewController.swift in Sources */,
 				33A189161B3A44E70077D5FA /* Power.swift in Sources */,
 				33A189151B3A44E70077D5FA /* Delay.swift in Sources */,
+				33C638F81B3BCFB000E8C0C7 /* MeasureTextField.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1004,6 +1022,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.petersobot.Hangover-UI-Sandbox";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Hangover/Hangover-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -1016,6 +1035,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.petersobot.Hangover-UI-Sandbox";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Hangover/Hangover-Bridging-Header.h";
 			};
 			name = Release;
 		};

@@ -94,6 +94,14 @@ class ConversationViewController:
         }
     }
 
+    func attributedStringForMessage(row: Int) -> NSAttributedString? {
+        if let conversation = conversation where row < conversation.messages.count {
+            let message = conversation.messages[row]
+            return TextMapper.attributedStringForText(message.text)
+        }
+        return nil
+    }
+
     // conversation delegate
     func conversation(
         conversation: Conversation,
@@ -170,7 +178,7 @@ class ConversationViewController:
                 view!.identifier = ChatMessageView.className()
             }
 
-            view!.configureWithMessage(message.text, orientation: user.isSelf ? .Right : .Left)
+            view!.configureWithText(message.text, orientation: user.isSelf ? .Right : .Left)
             return view
         }
 
@@ -191,7 +199,7 @@ class ConversationViewController:
 
     func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         if let conversation = conversation where row < conversation.messages.count {
-            return ChatMessageView.heightForWidth(conversation.messages[row].text, width: self.view.frame.width)
+            return ChatMessageView.heightForContainerWidth(attributedStringForMessage(row)!, width: self.view.frame.width)
         } else if row >= conversation!.messages.count && (conversation?.otherUserIsTyping ?? false) {
             return ChatTypingView.heightForWidth(self.view.frame.width)
         } else {
@@ -247,8 +255,12 @@ class ConversationViewController:
     @IBAction func messageTextFieldDidAction(sender: AnyObject) {
         let text = messageTextField.stringValue
         if text.characters.count > 0 {
-            conversation?.sendMessage([ChatMessageSegment(text: text)])
+            conversation?.sendMessage(TextMapper.segmentsForInput(text))
             messageTextField.stringValue = ""
         }
+    }
+
+    @IBAction func conversationTableViewDidAction(sender: AnyObject) {
+        self.window?.makeFirstResponder(messageTextField)
     }
 }

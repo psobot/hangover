@@ -138,7 +138,7 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
     }
 
     func splitView(splitView: NSSplitView, resizeSubviewsWithOldSize oldSize: NSSize) {
-        let dividerThickness = CGFloat(0)
+        let dividerThickness = CGFloat(1)
 
         let leftViewSize = NSMakeSize(
             270,
@@ -152,6 +152,8 @@ class ConversationsViewController: NSViewController, ClientDelegate, NSTableView
         // Resizing and placing the left view
         splitView.subviews[0].setFrameOrigin(NSMakePoint(0, 0))
         splitView.subviews[0].setFrameSize(leftViewSize)
+
+        print("Right view size: \(rightViewSize)")
 
         // Resizing and placing the right view
         splitView.subviews[1].setFrameOrigin(NSMakePoint(leftViewSize.width + dividerThickness, 0))

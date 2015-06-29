@@ -121,9 +121,9 @@ class Client : ChannelDelegate {
                 error: NSError?) in
 
                 let body = NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String
-                print(error?.description)
-                print(response?.description)
-                print("Received chat init response: '\(body)'")
+//                print(error?.description)
+//                print(response?.description)
+//                print("Received chat init response: '\(body)'")
 
                 // Parse the response by using a regex to find all the JS objects, and
                 // parsing them. Not everything will be parsable, but we don't care if

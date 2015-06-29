@@ -13,3 +13,4 @@
 @end
 
 void printKeyValuePairs(NSObject *self);
+CGFloat heightForAttributedString(NSAttributedString *attrString, CGFloat inWidth);

@@ -8,13 +8,11 @@
 
 import Foundation
 
-// Importing Valet is currently broken in XCode 7b1
-//import Valet
-//let VALET_IDENTIFIER = "HangoverGoogleAuthTokens"
+import Valet
+let VALET_IDENTIFIER = "HangoverGoogleAuthTokens"
 
-//func getValet() -> VALValet {
-func getValet() -> NSUserDefaults {
-    return NSUserDefaults.standardUserDefaults()
+func getValet() -> VALValet {
+    return VALValet(identifier: VALET_IDENTIFIER, accessibility: VALAccessibility.AfterFirstUnlockThisDeviceOnly)!
 }
 
 func loadCodes() -> (access_token: String, refresh_token: String)? {
@@ -35,10 +33,8 @@ func loadCodes() -> (access_token: String, refresh_token: String)? {
 
 func saveCodes(access_token: String, refresh_token: String) {
     let valet = getValet()
-//    valet.setString(access_token, forKey: "access_token")
-//    valet.setString(refresh_token, forKey: "refresh_token")
-    valet.setObject(access_token, forKey: "access_token")
-    valet.setObject(refresh_token, forKey: "refresh_token")
+    valet.setString(access_token, forKey: "access_token")
+    valet.setString(refresh_token, forKey: "refresh_token")
 }
 
 func clearCodes() {

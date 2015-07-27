@@ -64,7 +64,7 @@ class PBLiteTests: XCTestCase {
 
     func testDS20() {
         let data = (loadJavaScript("ds20")!["data"] as? NSArray)![0] as? NSArray
-        let r = CLIENT_GET_SELF_INFO_RESPONSE.parse(data)!
+        let r = parse(CLIENT_GET_SELF_INFO_RESPONSE.self, input: data)!
         XCTAssertEqual("cgsirp", r.cgsirp)
 
         let entity = r.self_entity
@@ -75,7 +75,7 @@ class PBLiteTests: XCTestCase {
     }
 
     func testMessageSegmentWithFormatting() {
-        let segment = MESSAGE_SEGMENT.parse([1, NSNull(), ["true", NSNull(), NSNull(), NSNull()], NSNull()])!
+        let segment = parse(MESSAGE_SEGMENT.self, input: [1, NSNull(), ["true", NSNull(), NSNull(), NSNull()], NSNull()])!
         XCTAssert(SegmentType.LINE_BREAK == segment.type_)
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.link_data)
@@ -85,7 +85,7 @@ class PBLiteTests: XCTestCase {
     }
 
     func testMessageSegmentWithLinkData() {
-        let segment = MESSAGE_SEGMENT.parse([1, NSNull(), NSNull(), ["link target"]])!
+        let segment = parse(MESSAGE_SEGMENT.self, input: [1, NSNull(), NSNull(), ["link target"]])!
         XCTAssert(1 == segment.type_)
         XCTAssertNil(segment.text)
         XCTAssertNil(segment.formatting)
@@ -93,12 +93,12 @@ class PBLiteTests: XCTestCase {
     }
 
     func testEnum() {
-        let enumTestMessage = EnumTestMessage.parse([2])!
+        let enumTestMessage = parse(EnumTestMessage.self, input: [2])!
         XCTAssert(enumTestMessage.enumValue == ConversationType.GROUP)
     }
 
     func testArray() {
-        let arrayTestMessage = ArrayTestMessage.parse([[["12"], ["23"], ["34"]]])!
+        let arrayTestMessage = parse(ArrayTestMessage.self, input: [[["12"], ["23"], ["34"]]])!
         XCTAssertEqual(arrayTestMessage.array.count, 3)
         XCTAssertEqual("12", arrayTestMessage.array[0].id)
         XCTAssertEqual("23", arrayTestMessage.array[1].id)
@@ -108,7 +108,7 @@ class PBLiteTests: XCTestCase {
     func testJSON() {
         let json = "{\"response_header\":{\"status\": \"OK\",\"debug_url\": \"\",\"request_trace_id\": \"5919526157227634454\",\"current_server_time\": \"1433707150506000\"},\"sync_timestamp\": \"1433706850507000\"}"
         let data = json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
-        let resp = CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE.parseRawJSON(data)
+        let resp: CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE? = parseJSON(data)
         XCTAssertEqual(resp!.sync_timestamp, "1433706850507000")
         XCTAssertNotNil(resp!.response_header)
         XCTAssertEqual(resp!.response_header.status, "OK")

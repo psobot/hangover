@@ -31,7 +31,7 @@ func unwrapOptionalType(any: Any) -> Any.Type? {
     //  This is super nasty, but works. (Doesn't work in Playground, because of lldb name mangling.)
     //  Also doesn't work for nested classes. Boo.
 
-    let dynamicTypeName = "\(reflect(any).valueType)"
+    let dynamicTypeName = "\(Mirror(reflecting: any).subjectType)"
     let containedTypeName = dynamicTypeName.stringByReplacingOccurrencesOfString("Swift.Optional<", withString: "").stringByReplacingOccurrencesOfString(">", withString: "")
     return NSClassFromString(containedTypeName)
 }
@@ -41,7 +41,7 @@ func unwrapOptionalArrayType(any: Any) -> Any.Type? {
     // don't look at me
     // I'm hideous
 
-    let dynamicTypeName = "\(reflect(any).valueType)"
+    let dynamicTypeName = "\(Mirror(reflecting: any).subjectType)"
     if dynamicTypeName.contains("Swift.Optional<Swift.Array") {
         let containedTypeName = dynamicTypeName.stringByReplacingOccurrencesOfString("Swift.Optional<", withString: "").stringByReplacingOccurrencesOfString("Swift.Array<", withString: "").stringByReplacingOccurrencesOfString(">", withString: "")
         return NSClassFromString(containedTypeName)
@@ -51,13 +51,13 @@ func unwrapOptionalArrayType(any: Any) -> Any.Type? {
 }
 
 func unwrapArray(any:Any) -> Any? {
-    let mi:MirrorType = reflect(any)
-    if mi.disposition != .IndexContainer {
+    let mi:Mirror = Mirror(reflecting: any)
+    if mi.displayStyle != Mirror.DisplayStyle.Collection {
         return any
     }
-    if mi.count == 0 { return nil } // Optional.None
-    let (_,some) = mi[0]
-    return some.valueType
+    if mi.children.count == 0 { return nil } // Optional.None
+    let (_, some) = mi.children.first!
+    return some
 }
 
 func getArrayMessageType(arr: Any) -> Message.Type? {
@@ -102,126 +102,6 @@ class Message : NSObject {
     required override init() { }
     class func isOptional() -> Bool { return false }
 
-    func parse(input: NSArray?) -> Self? { return self.dynamicType.parse(input) }
-    class func parse(input: NSArray?) -> Self? {
-        if input == nil && !isOptional() {
-            //  raise error? not an optional field
-            return nil
-        } else if input == nil && isOptional() {
-            return nil
-        }
-
-        if let arr = input {
-            let instance = self()
-            let reflection = reflect(instance)
-            for var i = 0; i < min(arr.count, reflection.count - 1); i++ {
-                let propertyName = reflection[i + 1].0
-                let property = reflection[i + 1].1.value
-
-                //  Unwrapping an optional sub-struct
-                if let type = unwrapOptionalType(property) as? Message.Type {
-                    let val: (AnyObject?) = type.parse(arr[i] as? NSArray)
-                    instance.setValue(val, forKey: propertyName)
-
-                //  Using a non-optional sub-struct
-                } else if let message = property as? Message {
-                    let val: (AnyObject?) = message.parse(arr[i] as? NSArray)
-                    instance.setValue(val, forKey: propertyName)
-
-                //  Unwrapping an optional enum
-                } else if let type = unwrapOptionalType(property) as? Enum.Type {
-                    let val: (AnyObject?) = type(value: (arr[i] as! NSNumber))
-                    instance.setValue(val, forKey: propertyName)
-
-                //  Using a non-optional sub-struct
-                } else if let enumv = property as? Enum {
-                    let val: (AnyObject?) = enumv.dynamicType(value: (arr[i] as! NSNumber))
-                    instance.setValue(val, forKey: propertyName)
-                } else {
-                    if arr[i] is NSNull {
-                        instance.setValue(nil, forKey: propertyName)
-                    } else {
-                        if let elementType = unwrapOptionalArrayType(property) {
-                            let elementMessageType = elementType as! Message.Type
-                            let val = (arr[i] as! NSArray).map { elementMessageType.parse($0 as? NSArray)! }
-                            instance.setValue(val, forKey:propertyName)
-                        } else if let elementType = getArrayMessageType(property) {
-                            let val = (arr[i] as! NSArray).map { elementType.parse($0 as? NSArray)! }
-                            instance.setValue(val, forKey:propertyName)
-                        } else if let elementType = getArrayEnumType(property) {
-                            let val = (arr[i] as! NSArray).map { elementType(value: ($0 as! NSNumber)) }
-                            instance.setValue(val, forKey:propertyName)
-                        } else {
-                            instance.setValue(valueWithTypeCoercion(property, value: arr[i]), forKey:propertyName)
-                        }
-                    }
-                }
-            }
-            return instance
-        } else {
-            //  Raise error: expecting array
-            return nil
-        }
-    }
-
-    func parseRawJSON(input: NSData) -> Self? { return self.dynamicType.parseRawJSON(input) }
-    class func parseRawJSON(input: NSData) -> Self? {
-        if let parsedObject = JSContext().evaluateScript(
-            "a = " + (NSString(data: input, encoding: 4)! as String)
-        ).toArray() {
-            return self.parse(parsedObject)
-        }
-        return nil
-    }
-
-    func parseJSON(input: NSDictionary) -> Self? { return self.dynamicType.parseJSON(input) }
-    class func parseJSON(obj: NSDictionary) -> Self? {
-        let instance = self()
-        let reflection = reflect(instance)
-        for var i = 1; i < reflection.count; i++ {
-            let propertyName = reflection[i].0
-            let property = reflection[i].1.value
-
-            let value: AnyObject? = obj[propertyName]
-
-            //  Unwrapping an optional sub-struct
-            if let type = unwrapOptionalType(property) as? Message.Type {
-                let val: (AnyObject?) = type.parseJSON(value as! NSDictionary)
-                instance.setValue(val, forKey: propertyName)
-
-                //  Using a non-optional sub-struct
-            } else if let message = property as? Message {
-                let val: (AnyObject?) = message.parseJSON(value as! NSDictionary)
-                instance.setValue(val, forKey: propertyName)
-
-                //  Unwrapping an optional enum
-            } else if let type = unwrapOptionalType(property) as? Enum.Type {
-                let val: (AnyObject?) = type(value: (value as! NSNumber))
-                instance.setValue(val, forKey: propertyName)
-
-                //  Using a non-optional sub-struct
-            } else if let enumv = property as? Enum {
-                let val: (AnyObject?) = enumv.dynamicType(value: (value as! NSNumber))
-                instance.setValue(val, forKey: propertyName)
-            } else {
-                if value is NSNull || value == nil {
-                    instance.setValue(nil, forKey: propertyName)
-                } else {
-                    if let elementType = getArrayMessageType(property) {
-                        let val = (value as! NSArray).map { elementType.parseJSON($0 as! NSDictionary)! }
-                        instance.setValue(val, forKey:propertyName)
-                    } else if let elementType = getArrayEnumType(property) {
-                        let val = (value as! NSArray).map { elementType(value: ($0 as! NSNumber)) }
-                        instance.setValue(val, forKey:propertyName)
-                    } else {
-                        instance.setValue(valueWithTypeCoercion(property, value: value), forKey: propertyName)
-                    }
-                }
-            }
-        }
-        return instance
-    }
-
     func serialize(input: AnyObject?) -> AnyObject? {
         //        # Validate input:
         //        if input_ is None and not self._is_optional:
@@ -244,4 +124,126 @@ class Message : NSObject {
         //        return res
         return nil
     }
+}
+
+//  Due to peculiarities in Swift's type system, we need to pass in
+//  "type" here.
+func parse<T: Message>(type: T.Type, input: NSArray?) -> T? {
+    if let arr = input {
+        let instance = type.init()
+        let reflection = Mirror(reflecting: instance)
+        let children = Array(reflection.children)
+        for var i = 0; i < min(arr.count, children.count); i++ {
+            let propertyName = children[i].label!
+            let property = children[i].value
+
+            //  Unwrapping an optional sub-struct
+            if let type = unwrapOptionalType(property) as? Message.Type {
+                let val: (AnyObject?) = parse(type, input: arr[i] as? NSArray)
+                instance.setValue(val, forKey: propertyName)
+
+            //  Using a non-optional sub-struct
+            } else if let message = property as? Message {
+                let val: (AnyObject?) = parse(message.dynamicType, input: arr[i] as? NSArray)
+                instance.setValue(val, forKey: propertyName)
+
+            //  Unwrapping an optional enum
+            } else if let type = unwrapOptionalType(property) as? Enum.Type {
+                let val: (AnyObject?) = type.init(value: (arr[i] as! NSNumber))
+                instance.setValue(val, forKey: propertyName)
+
+            //  Using a non-optional sub-struct
+            } else if let enumv = property as? Enum {
+                let val: (AnyObject?) = enumv.dynamicType.init(value: (arr[i] as! NSNumber))
+                instance.setValue(val, forKey: propertyName)
+            } else {
+                if arr[i] is NSNull {
+                    instance.setValue(nil, forKey: propertyName)
+                } else {
+                    if let elementType = unwrapOptionalArrayType(property) {
+                        let elementMessageType = elementType as! T.Type
+                        let val = (arr[i] as! NSArray).map { parse(elementMessageType, input: $0 as? NSArray)! }
+                        instance.setValue(val, forKey:propertyName)
+                    } else if let elementType = getArrayMessageType(property) {
+                        let val = (arr[i] as! NSArray).map { parse(elementType, input: $0 as? NSArray)! }
+                        instance.setValue(val, forKey:propertyName)
+                    } else if let elementType = getArrayEnumType(property) {
+                        let val = (arr[i] as! NSArray).map { elementType.init(value: ($0 as! NSNumber)) }
+                        instance.setValue(val, forKey:propertyName)
+                    } else {
+                        instance.setValue(valueWithTypeCoercion(property, value: arr[i]), forKey:propertyName)
+                    }
+                }
+            }
+        }
+        return instance
+    } else {
+        //  Raise error: expecting array
+        return nil
+    }
+}
+
+func parseProtoJSON<T: Message>(input: NSData) -> T? {
+    if let parsedObject = JSContext().evaluateScript(
+        "a = " + (NSString(data: input, encoding: 4)! as String)
+    ).toArray() {
+        return parse(T.self, input: parsedObject)
+    }
+    return nil
+}
+
+func parseJSON<T: Message>(input: NSData) -> T? {
+    if let parsedObject = JSContext().evaluateScript(
+        "a = " + (NSString(data: input, encoding: 4)! as String)
+        ).toDictionary() {
+            return parseDictionary(T.self, obj: parsedObject)
+    }
+    return nil
+}
+
+func parseDictionary<T: Message>(type: T.Type, obj: NSDictionary) -> T? {
+    let instance = type.init()
+    let reflection = Mirror(reflecting: instance)
+    for child in reflection.children {
+        let propertyName = child.label!
+        let property = child.value
+
+        let value: AnyObject? = obj[propertyName]
+
+        //  Unwrapping an optional sub-struct
+        if let type = unwrapOptionalType(property) as? Message.Type {
+            let val: (AnyObject?) = parseDictionary(type, obj: value as! NSDictionary)
+            instance.setValue(val, forKey: propertyName)
+
+            //  Using a non-optional sub-struct
+        } else if let message = property as? Message {
+            let val: (AnyObject?) = parseDictionary(message.dynamicType, obj: value as! NSDictionary)
+            instance.setValue(val, forKey: propertyName)
+
+            //  Unwrapping an optional enum
+        } else if let type = unwrapOptionalType(property) as? Enum.Type {
+            let val: (AnyObject?) = type.init(value: (value as! NSNumber))
+            instance.setValue(val, forKey: propertyName)
+
+            //  Using a non-optional sub-struct
+        } else if let enumv = property as? Enum {
+            let val: (AnyObject?) = enumv.dynamicType.init(value: (value as! NSNumber))
+            instance.setValue(val, forKey: propertyName)
+        } else {
+            if value is NSNull || value == nil {
+                instance.setValue(nil, forKey: propertyName)
+            } else {
+                if let elementType = getArrayMessageType(property) {
+                    let val = (value as! NSArray).map { parseDictionary(elementType, obj: $0 as! NSDictionary)! }
+                    instance.setValue(val, forKey:propertyName)
+                } else if let elementType = getArrayEnumType(property) {
+                    let val = (value as! NSArray).map { elementType.init(value: ($0 as! NSNumber)) }
+                    instance.setValue(val, forKey:propertyName)
+                } else {
+                    instance.setValue(valueWithTypeCoercion(property, value: value), forKey: propertyName)
+                }
+            }
+        }
+    }
+    return instance
 }

@@ -11,7 +11,7 @@ import Cocoa
 import WebKit
 import Alamofire
 
-class LoginViewController : NSViewController {
+class LoginViewController : NSViewController, WebResourceLoadDelegate, WebFrameLoadDelegate, WebPolicyDelegate {
     @IBOutlet weak var webView: WebView!
     var manager: Alamofire.Manager?
     var cb: ((auth_code: String) -> Void)?
@@ -24,11 +24,11 @@ class LoginViewController : NSViewController {
         webView.mainFrame.loadRequest(req)
     }
 
-    override func webView(sender: WebView!, didFinishLoadForFrame frame: WebFrame!) {
+    func webView(sender: WebView!, didFinishLoadForFrame frame: WebFrame!) {
 
     }
 
-    override func webView(
+    func webView(
         webView: WebView!,
         decidePolicyForNavigationAction actionInformation: [NSObject : AnyObject]!,
         request: NSURLRequest!,

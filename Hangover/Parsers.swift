@@ -54,7 +54,7 @@ func _parse_payload(payload: [AnyObject]) -> [CLIENT_STATE_UPDATE] {
     // Yield a list of ClientStateUpdates.
     if payload[0] as? String == "cbu" {
         // payload[1] is a list of state updates.
-        return flatMap(payload[1] as! [NSArray]) { CLIENT_STATE_UPDATE.parse($0) }
+        return flatMap(payload[1] as! [NSArray]) { parse(CLIENT_STATE_UPDATE.self, input: $0) }
     } else {
         print("Ignoring payload with header: \(payload[0])", appendNewline: false)
         return []

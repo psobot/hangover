@@ -157,11 +157,11 @@ class Client : ChannelDelegate {
                 self.header_version = ((data_dict["ds:2"] as! NSArray)[0] as! NSArray)[6] as? String
                 self.header_id = ((data_dict["ds:4"] as! NSArray)[0] as! NSArray)[7] as? String
 
-                let self_entity = CLIENT_GET_SELF_INFO_RESPONSE.parse((data_dict["ds:20"] as! NSArray)[0] as? NSArray)!.self_entity
+                let self_entity = parse(CLIENT_GET_SELF_INFO_RESPONSE.self, input: (data_dict["ds:20"] as! NSArray)[0] as? NSArray)!.self_entity
 
                 let initial_conv_states_raw = ((data_dict["ds:19"] as! NSArray)[0] as! NSArray)[3] as! NSArray
                 let initial_conv_states = (initial_conv_states_raw as! [NSArray]).map {
-                    CLIENT_CONVERSATION_STATE.parse($0)!
+                    parse(CLIENT_CONVERSATION_STATE.self, input: $0)!
                 }
                 let initial_conv_parts = initial_conv_states.flatMap { $0.conversation.participant_data }
 
@@ -171,7 +171,7 @@ class Client : ChannelDelegate {
                 if let ds21 = data_dict["ds:21"] as? NSArray {
                     sync_timestamp = ((ds21[0] as! NSArray)[1] as! NSArray)[4] as? NSNumber
 
-                    let entities = INITIAL_CLIENT_ENTITIES.parse(ds21[0] as? NSArray)!
+                    let entities = parse(INITIAL_CLIENT_ENTITIES.self, input: ds21[0] as? NSArray)!
                     initial_entities = (entities.entities) + [
                         entities.group1.entity,
                         entities.group2.entity,
@@ -348,7 +348,7 @@ class Client : ChannelDelegate {
         ]
         self.request("conversations/syncallnewevents", body: data, use_json: false) {
             request, response, responseObject, error in
-            cb(response: CLIENT_SYNC_ALL_NEW_EVENTS_RESPONSE.parseRawJSON(responseObject! as! NSData))
+            cb(response: parseProtoJSON(responseObject! as! NSData))
         }
     }
 
@@ -596,7 +596,8 @@ class Client : ChannelDelegate {
         let data = [self.getRequestHeader(), NSNull(), chat_id_list.map { [$0] }]
         self.request("contacts/getentitybyid", body: data, use_json: false) {
             (_, _, responseObject, _) -> Void in
-            cb(CLIENT_GET_ENTITY_BY_ID_RESPONSE.parseRawJSON(responseObject! as! NSData)!)
+            let obj: CLIENT_GET_ENTITY_BY_ID_RESPONSE? = parseProtoJSON(responseObject! as! NSData)
+            cb(obj!)
         }
     }
 
@@ -629,7 +630,7 @@ class Client : ChannelDelegate {
             (_, _, responseObject, _) -> Void in
             //  TODO: Undo the sins done here
             let result = JSContext().evaluateScript("a = " + (NSString(data: responseObject as! NSData, encoding: NSUTF8StringEncoding)! as String)).toArray()
-            cb(CLIENT_GET_CONVERSATION_RESPONSE.parse(result)!)
+            cb(parse(CLIENT_GET_CONVERSATION_RESPONSE.self, input: result)!)
         }
     }
 

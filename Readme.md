@@ -12,6 +12,10 @@ Most of the code has simply been ported over from [the original
 Python](https://github.com/tdryer/hangups) to Swift, and it's not pretty.
 (Forgive me for the sins I've committed while hacking this together.)
 
+## Download
+
+**Hangover is super alpha software, not reliable or ready for prime time use.** If you're feeling adventurous, however, head over to [the downloads page](https://github.com/psobot/hangover/releases) to grab [the latest release](https://github.com/psobot/hangover/releases/download/v0.1-alpha/Hangover.app.zip). (Or just [click here to download `v0.1-alpha`](https://github.com/psobot/hangover/releases/download/v0.1-alpha/Hangover.app.zip).)
+
 ## Screenshots
 
 ![ooh pretty](https://cloud.githubusercontent.com/assets/213293/8223288/f3b88bb0-1543-11e5-9aaf-d8f90eadd8e3.png)
